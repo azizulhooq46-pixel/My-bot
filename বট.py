@@ -156,6 +156,11 @@ async def mute(ctx, member: discord.Member, time: str = "0", *, reason: str = "N
             color=discord.Color.red(),
         )
         await ctx.send(embed=embed)
+@mute.error
+async def mute_error(ctx, error):
+  if isinstance(error, commands.MissingPermissions):
+    await ctx.send("❌ You don't have permission to use this command!")
+	  
 @gogagaga.command()
 @commands.has_permissions(ban_members=True)
 async def ban(ctx,member:discord.Member,*,reason="No reason provided"):
