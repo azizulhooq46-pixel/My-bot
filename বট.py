@@ -52,7 +52,11 @@ async def warn(ctx, member: discord.Member, *, reason="No reason provided"):
     if user_id not in warnings_data:
         warnings_data[user_id] = []
     warnings_data[user_id].append(reason)
-
+@warn.error
+async def warn_error(ctx, error):
+  if isinstance(error, commands.MissingPermissions):
+    await ctx.send("❌ You don't have permission to use this command!")
+	  
     # চ্যানেলে দেখানোর এমবেড
     embed = discord.Embed(
         title="Warning",
