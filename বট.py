@@ -147,4 +147,4 @@ async def ban(ctx,member:discord.Member,*,reason="No reason provided"):
 		await ctx.send(embed=fembed)
 
 
-gogagaga.run(os.getenv("MTUyMzUxMTQ1MzUyNzU3NjYwNg.GaBlVO.DtcjMunBDELeap-BC8nrZ4_mmvGGczZbe07gns"))
+gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
