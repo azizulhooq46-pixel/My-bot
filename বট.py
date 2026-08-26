@@ -163,5 +163,5 @@ async def ban(ctx,member:discord.Member,*,reason="No reason provided"):
 		fembed=discord.Embed(title="ERROR",description="Couldn't ban member since he is higher than me or I lack permission",color=discord.Color.red())
 		await ctx.send(embed=fembed)
 
-
+keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
