@@ -163,14 +163,128 @@ async def mute_error(ctx, error):
 	  
 @gogagaga.command()
 @commands.has_permissions(ban_members=True)
-async def ban(ctx,member:discord.Member,*,reason="No reason provided"):
-	try:
-		await member.ban(reason=reason)
-		embed=discord.Embed(title="Banned",description=f"*{member} was banned from {ctx.guild.name}*.|{reason}",color=discord.Color.blue())
-		dm=discord.Embed(title=f"**BANNED FROM {ctx.guild.name}**",description=f"You have been banned ")
-	except discord.Forbidden:
-		fembed=discord.Embed(title="ERROR",description="Couldn't ban member since he is higher than me or I lack permission",color=discord.Color.red())
-		await ctx.send(embed=fembed)
+async def ban(ctx, member: discord.Member, *, reason="No reason provided"):
+    # ১. ইউজারের DM-এর জন্য এমবেড
+    dm_embed = discord.Embed(
+        title=f"**BANNED FROM {ctx.guild.name}**",
+        description=f"You have been banned from {ctx.guild.name} | Reason: {reason}",
+        color=discord.Color.red()
+    )
 
+    # ২. ব্যান করার আগেই DM পাঠানোর চেষ্টা করা
+    try:
+        await member.send(embed=dm_embed)
+    except discord.Forbidden:
+        pass
+
+    # ৩. আসল ব্যান প্রসেস ও চ্যানেলে মেসেজ পাঠানো
+    try:
+        await member.ban(reason=reason)
+
+        embed = discord.Embed(
+            title="Banned",
+            description=f"*{member} was banned from {ctx.guild.name}.* | {reason}",
+            color=discord.Color.blue()
+        )
+        await ctx.send(embed=embed)
+
+    except discord.Forbidden:
+        fembed = discord.Embed(
+            title="ERROR",
+            description="Couldn't ban member since he is higher than me or I lack permission.",
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=fembed)
+# Unban Command
+@gogagaga.command()
+@commands.has_permissions(ban_members=True)
+async def unban(ctx, *, user_input: str):
+    # ব্যান করা ইউজারদের তালিকা নিয়ে আসা
+    banned_users = [entry async for entry in ctx.guild.bans()]
+    
+    user_to_unban = None
+
+    for ban_entry in banned_users:
+        user = ban_entry.user
+        # ইউজারনেম, প্রদর্শন নাম বা ID মিলিয়ে দেখা
+        if (
+            user.name == user_input
+            or str(user.id) == user_input
+            or f"{user.name}#{user.discriminator}" == user_input
+        ):
+            user_to_unban = user
+            break
+
+    if user_to_unban is None:
+        embed = discord.Embed(
+            title="Error",
+            description=f"Could not find a banned user matching `{user_input}`.",
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=embed)
+        return
+
+    try:
+        await ctx.guild.unban(user_to_unban)
+        embed = discord.Embed(
+            title="Unbanned",
+            description=f"*{user_to_unban.name} has been unbanned.*",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed)
+    except discord.Forbidden:
+        embed = discord.Embed(
+            title="Error",
+            description="I lack permissions to unban this user.",
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=embed)
+
+
+# Role Command (Add or Remove Role)
+@gogagaga.command()
+@commands.has_permissions(manage_roles=True)
+async def role(ctx, member: discord.Member, *, role: discord.Role):
+    # ইউজারের যদি আগে থেকেই রোলটি থাকে তবে সরিয়ে দেবে, না থাকলে যোগ করবে
+    if role in member.roles:
+        await member.remove_roles(role)
+        embed = discord.Embed(
+            title="Role Removed",
+            description=f"Removed **{role.name}** from {member.mention}",
+            color=discord.Color.orange()
+        )
+    else:
+        await member.add_roles(role)
+        embed = discord.Embed(
+            title="Role Added",
+            description=f"Added **{role.name}** to {member.mention}",
+            color=discord.Color.green()
+        )
+    await ctx.send(embed=embed)
+
+
+# Whois Command (User Info & Roles Check)
+@gogagaga.command(aliases=["userinfo"])
+async def whois(ctx, member: discord.Member = None):
+    # ইউজার উল্লেখ না করলে কমান্ড দেওয়া ব্যক্তির তথ্য দেখাবে
+    member = member or ctx.author
+
+    # ইউজারের রোলগুলোর তালিকা ( @everyone রোল বাদে )
+    roles = [role.mention for role in member.roles if role != ctx.guild.default_role]
+    roles_str = ", ".join(roles) if roles else "No Roles"
+
+    embed = discord.Embed(
+        title=f"User Info - {member.name}",
+        color=member.color
+    )
+    
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.add_field(name="Joined Server", value=member.joined_at.strftime("%b %d, %Y"), inline=True)
+    embed.add_field(name="Account Created", value=member.created_at.strftime("%b %d, %Y"), inline=True)
+    embed.add_field(name=f"Roles [{len(roles)}]", value=roles_str, inline=False)
+    embed.set_footer(text=f"ID: {member.id}")
+
+    await ctx.send(embed=embed)
+			
 keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
