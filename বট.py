@@ -299,8 +299,8 @@ async def whois(ctx, member: discord.Member = None):
 
     await ctx.send(embed=embed)
 
-# Load Google API Key from Render Environment Variable (or replace with os.getenv)
-	@gogagaga.event
+# Load Google API Key from Render Environment Variable (or replace with os.get
+@gogagaga.event
 async def on_message(message):
   # Ignore messages sent by the bot itself
   if message.author == gogagaga.user:
