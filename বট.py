@@ -300,80 +300,173 @@ async def whois(ctx, member: discord.Member = None):
     await ctx.send(embed=embed)
 
 # Load Google API Key from Render Environment Variable (or replace with os.get
+
+# ==========================================
+# GEMINI AI SETUP
+# ==========================================
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+client = genai.Client(
+    api_key=GEMINI_API_KEY
+)
+
+AI_MODEL = "gemini-2.5-flash"
+
+
+# ==========================================
+# GEMINI AI
+# ==========================================
+
 @gogagaga.event
 async def on_message(message):
-  # Ignore messages sent by the bot itself
-  if message.author == gogagaga.user:
-    return
 
-  # Check if the bot was explicitly mentioned (@pinged)
-  if gogagaga.user in message.mentions:
-    # Strip out the @mention tag to leave only the raw user prompt
-    user_prompt = (
-        message.content.replace(f'<@{gogagaga.user.id}>', '')
-        .replace(f'<@!{gogagaga.user.id}>', '')
-        .strip()
-    )
+    # Ignore messages sent by the bot itself
+    if message.author == gogagaga.user:
+        return
 
-    # If the user only pinged without a prompt
-    if not user_prompt:
-      embed = discord.Embed(
-          title='👋 Hello!',
-          description=f'How can I help you today, {message.author.mention}?',
-          color=discord.Color.blue(),
-      )
-      await message.reply(embed=embed)
-      return
+    # ==========================================
+    # CHECK IF BOT WAS MENTIONED
+    # ==========================================
 
-    async with message.channel.typing():
-      try:
-        # Call Gemini API
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=user_prompt,
+    if gogagaga.user in message.mentions:
+
+        # Remove the bot mention
+        user_prompt = (
+            message.content
+            .replace(f"<@{gogagaga.user.id}>", "")
+            .replace(f"<@!{gogagaga.user.id}>", "")
+            .strip()
         )
 
-        if response.text:
-          # Discord embeds have a 4096 character limit for descriptions
-          ai_text = (
-              response.text[:4000] + '...'
-              if len(response.text) > 4000
-              else response.text
-          )
+        # ==========================================
+        # USER ONLY MENTIONED THE BOT
+        # ==========================================
 
-          embed = discord.Embed(
-              title='✨ Gemini AI Response',
-              description=ai_text,
-              color=discord.Color.green(),
-          )
-          embed.set_footer(
-              text=f'Requested by {message.author.display_name}',
-              icon_url=(
-                  message.author.avatar.url if message.author.avatar else None
-              ),
-          )
-          await message.reply(embed=embed)
-        else:
-          embed = discord.Embed(
-              title='⚠️ No Output',
-              description='I couldn\'t generate a response for that prompt.',
-              color=discord.Color.gold(),
-          )
-          await message.reply(embed=embed)
+        if not user_prompt:
 
-      except Exception as e:
-        print(f'Gemini API Error: {e}')
-        embed = discord.Embed(
-            title='❌ API Error',
-            description='An error occurred while contacting the AI server.',
-            color=discord.Color.red(),
-        )
-        await message.reply(embed=embed)
+            embed = discord.Embed(
+                title="👋 Hello!",
+                description=(
+                    f"How can I help you today, "
+                    f"{message.author.mention}?"
+                ),
+                color=discord.Color.blue()
+            )
 
-    return
+            await message.reply(embed=embed)
+            return
 
-  # Process normal prefix commands (e.g., !warn, !mute)
-  await gogagaga.process_commands(message)
+        # ==========================================
+        # GEMINI REQUEST
+        # ==========================================
+
+        async with message.channel.typing():
+
+            try:
+
+                print(
+                    f"🤖 Gemini request: "
+                    f"{message.author} → {user_prompt}"
+                )
+
+                response = client.models.generate_content(
+                    model=AI_MODEL,
+                    contents=user_prompt
+                )
+
+                # ==========================================
+                # CHECK GEMINI RESPONSE
+                # ==========================================
+
+                if response and response.text:
+
+                    ai_text = response.text.strip()
+
+                    # Discord embed description max ≈ 4096
+                    if len(ai_text) > 4000:
+                        ai_text = ai_text[:3997] + "..."
+
+                    embed = discord.Embed(
+                        title="✨ Gemini AI Response",
+                        description=ai_text,
+                        color=discord.Color.green()
+                    )
+
+                    # Footer
+                    if message.author.avatar:
+
+                        embed.set_footer(
+                            text=(
+                                f"Requested by "
+                                f"{message.author.display_name}"
+                            ),
+                            icon_url=message.author.avatar.url
+                        )
+
+                    else:
+
+                        embed.set_footer(
+                            text=(
+                                f"Requested by "
+                                f"{message.author.display_name}"
+                            )
+                        )
+
+                    await message.reply(embed=embed)
+
+                    print("✅ Gemini response sent!")
+
+                else:
+
+                    embed = discord.Embed(
+                        title="⚠️ No Output",
+                        description=(
+                            "Gemini didn't return a response."
+                        ),
+                        color=discord.Color.gold()
+                    )
+
+                    await message.reply(embed=embed)
+
+            # ==========================================
+            # ERROR HANDLING
+            # ==========================================
+
+            except Exception as e:
+
+                print("================================")
+                print("❌ GEMINI API ERROR")
+                print(f"Error type: {type(e).__name__}")
+                print(f"Error: {e}")
+                print("================================")
+
+                error_text = str(e)
+
+                if not error_text:
+                    error_text = "Unknown Gemini API error."
+
+                if len(error_text) > 3800:
+                    error_text = error_text[:3800] + "..."
+
+                embed = discord.Embed(
+                    title="❌ Gemini API Error",
+                    description=(
+                        "Gemini couldn't process your request.\n\n"
+                        f"```{error_text}```"
+                    ),
+                    color=discord.Color.red()
+                )
+
+                await message.reply(embed=embed)
+
+        return
+
+    # ==========================================
+    # NORMAL PREFIX COMMANDS
+    # ==========================================
+
+    await gogagaga.process_commands(message)    
 		  
 keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
