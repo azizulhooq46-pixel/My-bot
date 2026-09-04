@@ -300,47 +300,47 @@ async def whois(ctx, member: discord.Member = None):
     await ctx.send(embed=embed)
 
 # Load Google API Key from Render Environment Variable (or replace with os.getenv)
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-# Your existing discord bot instance
-# gogagaga = commands.Bot(...) 
-
-@gogagaga.event
+	@gogagaga.event
 async def on_message(message):
-    # Ignore messages sent by the bot itself to prevent infinite loops
-    if message.author == gogagaga.user:
-        return
+  # Ignore messages sent by the bot itself
+  if message.author == gogagaga.user:
+    return
 
-    # Check if the bot was pinged (@mentioned) in the message
-    if gogagaga.user in message.mentions:
-        # Remove the @mention tag from the prompt so Gemini gets clean text
-        user_prompt = message.content.replace(f'<@{gogagaga.user.id}>', '').replace(f'<@!{gogagaga.user.id}>', '').strip()
+  # Check if the bot was explicitly pinged (@mentioned)
+  if gogagaga.user in message.mentions:
+    # Clean the mention from the user's prompt
+    user_prompt = (
+        message.content.replace(f'<@{gogagaga.user.id}>', '')
+        .replace(f'<@!{gogagaga.user.id}>', '')
+        .strip()
+    )
 
-        if not user_prompt:
-            await message.channel.send(f"Hello {message.author.mention}! How can I help you today?")
-            return
+    if not user_prompt:
+      await message.reply(
+          f'Hello {message.author.mention}! How can I help you today?'
+      )
+      return
 
-        async with message.channel.typing():
-            try:
-                # Generate AI response using the new Google GenAI SDK
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=user_prompt,
-                )
-                
-                # Send the AI response back to the channel
-                if response.text:
-                    await message.reply(response.text)
-                else:
-                    await message.reply("I couldn't generate a response for that prompt.")
+    async with message.channel.typing():
+      try:
+        response = client.models.generate_content(
+            model='gemini-3.6-flash',
+            contents=user_prompt,
+        )
 
-            except Exception as e:
-                print(f"Gemini API Error: {e}")
-                await message.reply("❌ An error occurred while contacting the AI server.")
+        if response.text:
+          await message.reply(response.text)
+        else:
+          await message.reply('I could not generate a response for that.')
 
-    # Process regular bot commands (like !ping, !warn, !mute)
-    await gogagaga.process_commands(message)
-			
-			
+      except Exception as e:
+        print(f'Gemini API Error: {e}')
+        await message.reply('❌ An error occurred while contacting the AI server.')
+
+    return  # Stop execution here if it was a mention
+
+  # Process prefix commands like !warn or !mute only if bot wasn't pinged
+  await gogagaga.process_commands(message)
+	
 keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
