@@ -306,41 +306,74 @@ async def on_message(message):
   if message.author == gogagaga.user:
     return
 
-  # Check if the bot was explicitly pinged (@mentioned)
+  # Check if the bot was explicitly mentioned (@pinged)
   if gogagaga.user in message.mentions:
-    # Clean the mention from the user's prompt
+    # Strip out the @mention tag to leave only the raw user prompt
     user_prompt = (
         message.content.replace(f'<@{gogagaga.user.id}>', '')
         .replace(f'<@!{gogagaga.user.id}>', '')
         .strip()
     )
 
+    # If the user only pinged without a prompt
     if not user_prompt:
-      await message.reply(
-          f'Hello {message.author.mention}! How can I help you today?'
+      embed = discord.Embed(
+          title='👋 Hello!',
+          description=f'How can I help you today, {message.author.mention}?',
+          color=discord.Color.blue(),
       )
+      await message.reply(embed=embed)
       return
 
     async with message.channel.typing():
       try:
+        # Call Gemini API
         response = client.models.generate_content(
-            model='gemini-3.6-flash',
+            model='gemini-2.5-flash',
             contents=user_prompt,
         )
 
         if response.text:
-          await message.reply(response.text)
+          # Discord embeds have a 4096 character limit for descriptions
+          ai_text = (
+              response.text[:4000] + '...'
+              if len(response.text) > 4000
+              else response.text
+          )
+
+          embed = discord.Embed(
+              title='✨ Gemini AI Response',
+              description=ai_text,
+              color=discord.Color.green(),
+          )
+          embed.set_footer(
+              text=f'Requested by {message.author.display_name}',
+              icon_url=(
+                  message.author.avatar.url if message.author.avatar else None
+              ),
+          )
+          await message.reply(embed=embed)
         else:
-          await message.reply('I could not generate a response for that.')
+          embed = discord.Embed(
+              title='⚠️ No Output',
+              description='I couldn\'t generate a response for that prompt.',
+              color=discord.Color.gold(),
+          )
+          await message.reply(embed=embed)
 
       except Exception as e:
         print(f'Gemini API Error: {e}')
-        await message.reply('❌ An error occurred while contacting the AI server.')
+        embed = discord.Embed(
+            title='❌ API Error',
+            description='An error occurred while contacting the AI server.',
+            color=discord.Color.red(),
+        )
+        await message.reply(embed=embed)
 
-    return  # Stop execution here if it was a mention
+    return
 
-  # Process prefix commands like !warn or !mute only if bot wasn't pinged
+  # Process normal prefix commands (e.g., !warn, !mute)
   await gogagaga.process_commands(message)
-	
+		  
 keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
