@@ -322,7 +322,6 @@ async def whois(ctx, member: discord.Member = None):
 # ==========================================
 # GEMINI AI SETUP
 # ==========================================
-
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 client = genai.Client(
@@ -337,12 +336,6 @@ AI_MODELS = [
     "gemini-3.5-flash-lite",
     "gemini-2.5-flash",
 ]
-
-
-# ==========================================
-# GEMINI AI
-# ==========================================
-
 @gogagaga.event
 async def on_message(message):
 
@@ -350,10 +343,7 @@ async def on_message(message):
     if message.author == gogagaga.user:
         return
 
-    # ==========================================
     # CHECK IF BOT WAS MENTIONED
-    # ==========================================
-
     if gogagaga.user in message.mentions:
 
         # Remove the bot mention
@@ -364,12 +354,8 @@ async def on_message(message):
             .strip()
         )
 
-        # ==========================================
         # USER ONLY MENTIONED THE BOT
-        # ==========================================
-
         if not user_prompt:
-
             embed = discord.Embed(
                 title="👋 Hello!",
                 description=(
@@ -378,26 +364,52 @@ async def on_message(message):
                 ),
                 color=discord.Color.blue()
             )
-
             await message.reply(embed=embed)
             return
 
-        # ==========================================
         # GEMINI REQUEST
-        # ==========================================
-
         async with message.channel.typing():
+            try:
+                print(f"Gemini request: {message.author} - {user_prompt}")
 
-            
-                # ==========================================
+                response = None
+                last_error = None
+                used_model = None
+
+                for model_name in AI_MODELS:
+                    try:
+                        print(f"Trying model: {model_name}")
+                        response = client.models.generate_content(
+                            model=model_name,
+                            contents=user_prompt
+                        )
+                        used_model = model_name
+                        print(f"Model worked: {model_name}")
+                        break
+                    except Exception as model_error:
+                        error_text = str(model_error).lower()
+                        last_error = model_error
+                        print(f"Model failed: {model_name} -> {model_error}")
+
+                        if (
+                            "503" in error_text
+                            or "unavailable" in error_text
+                            or "high demand" in error_text
+                            or "overloaded" in error_text
+                            or "resource exhausted" in error_text
+                            or "429" in error_text
+                        ):
+                            continue
+                        else:
+                            raise model_error
+
+                if response is None:
+                    raise last_error
+
                 # CHECK GEMINI RESPONSE
-                # ==========================================
-
                 if response and response.text:
-
                     ai_text = response.text.strip()
 
-                    # Discord embed description max ≈ 4096
                     if len(ai_text) > 4000:
                         ai_text = ai_text[:3997] + "..."
 
@@ -407,90 +419,30 @@ async def on_message(message):
                         color=discord.Color.green()
                     )
 
-                    # Footer
-                    if message.author.avatar:
+                    footer_text = f"Requested by {message.author.display_name} | {used_model}"
 
+                    if message.author.avatar:
                         embed.set_footer(
-                            text=(
-                                f"Requested by "
-                                f"{message.author.display_name}"
-                            ),
+                            text=footer_text,
                             icon_url=message.author.avatar.url
                         )
-
                     else:
-
-                        embed.set_footer(
-                            text=(
-                                f"Requested by "
-                                f"{message.author.display_name}"
-                            )
-                        )
+                        embed.set_footer(text=footer_text)
 
                     await message.reply(embed=embed)
-
-                    print("✅ Gemini response sent!")
+                    print("Gemini response sent!")
 
                 else:
-
                     embed = discord.Embed(
                         title="⚠️ No Output",
-                        description=(
-                            "Gemini didn't return a response."
-                        ),
+                        description="Gemini didn't return a response.",
                         color=discord.Color.gold()
                     )
-
                     await message.reply(embed=embed)
 
-            # ==========================================
-            # ERROR HANDLING
-            # ==========================================
-            
-
-            print(
-                f" Gemini request: "
-                f"{message.author} - {user_prompt}"
-            )
-
-            response = None
-            last_error = None
-            used_model = None
-
-            for model_name in AI_MODELS:
-                try:
-                    print(f"Trying model: {model_name}")
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=user_prompt
-                    )
-                    used_model = model_name
-                    print(f"Model worked: {model_name}")
-                    break
-                except Exception as model_error:
-                    error_text = str(model_error).lower()
-                    last_error = model_error
-                    print(f"Model failed: {model_name} -> {model_error}")
-
-                    # Only switch model on busy / unavailable errors
-                    if (
-                        "503" in error_text
-                        or "unavailable" in error_text
-                        or "high demand" in error_text
-                        or "overloaded" in error_text
-                        or "resource exhausted" in error_text
-                        or "429" in error_text
-                    ):
-                        continue
-                    else:
-                        raise model_error
-
-            if response is None:
-                raise last_error
             except Exception as e:
-
                 print("================================")
-                print("❌ GEMINI API ERROR")
+                print("GEMINI API ERROR")
                 print(f"Error type: {type(e).__name__}")
                 print(f"Error: {e}")
                 print("================================")
@@ -511,16 +463,10 @@ async def on_message(message):
                     ),
                     color=discord.Color.red()
                 )
-
                 await message.reply(embed=embed)
+                return
 
-        return
-
-    # ==========================================
     # NORMAL PREFIX COMMANDS
-    # ==========================================
-
-    await gogagaga.process_commands(message)    
-		  
+    await gogagaga.process_commands(message)               
 keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
