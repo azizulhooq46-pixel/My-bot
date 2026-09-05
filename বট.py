@@ -23,7 +23,7 @@ def keep_alive():
   t.start()
 app = Flask('')
 
-@app.route('/')
+
 
 # Intents
 blah = discord.Intents.default()
