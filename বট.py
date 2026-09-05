@@ -446,7 +446,7 @@ async def on_message(message):
             # ==========================================
             # ERROR HANDLING
             # ==========================================
-            try:
+            
 
             print(
                 f" Gemini request: "
