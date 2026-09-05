@@ -24,15 +24,7 @@ def keep_alive():
 app = Flask('')
 
 @app.route('/')
-def home():
-    return "I'm alive!"
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
 # Intents
 blah = discord.Intents.default()
 blah.message_content = True
@@ -56,7 +48,18 @@ async def ping(ctx):
         color=discord.Color.blue()
     )
     await ctx.send(embed=embed)
-
+# ping Command
+@gogagaga.command()
+@commands.cooldown(1, 5, commands.BucketType.user)
+async def ping(ctx):
+    latency = round(gogagaga.latency * 1000)
+    embed = discord.Embed(
+        title="🏓 Pong!",
+        description=f"Latency is `{latency}ms`",
+        color=discord.Color.blue()
+    )
+    await ctx.send(embed=embed)
+	
 # Warn Command
 @gogagaga.command()
 @commands.has_permissions(kick_members=True)
