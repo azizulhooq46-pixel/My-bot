@@ -11,22 +11,7 @@ from discord.ext import tasks
 
 
 # Add your Render app URL here
-@tasks.loop(minutes=10)
-async def keep_app_awake():
-  url = "https://my-bot-1-mntj.onrender.com/"
-  try:
-    async with aiohttp.ClientSession() as session:
-      async with session.get(url) as response:
-        print(f"Self-ping status: {response.status}")
-  except Exception as e:
-    print(f"Self-ping failed: {e}")
 
-
-@gogagaga.event
-async def on_ready():
-  print(f"Logged in as {gogagaga.user}")
-  if not keep_app_awake.is_running():
-    keep_app_awake.start()
 	  
 app = Flask('')
 
@@ -61,7 +46,22 @@ warnings_data = {}
 @gogagaga.event
 async def on_ready():
     print(f"Logged in as {gogagaga.user}")
+@tasks.loop(minutes=10)
+async def keep_app_awake():
+  url = "https://my-bot-1-mntj.onrender.com/"
+  try:
+    async with aiohttp.ClientSession() as session:
+      async with session.get(url) as response:
+        print(f"Self-ping status: {response.status}")
+  except Exception as e:
+    print(f"Self-ping failed: {e}")
 
+
+@gogagaga.event
+async def on_ready():
+  print(f"Logged in as {gogagaga.user}")
+  if not keep_app_awake.is_running():
+    keep_app_awake.start()
 # ping Command
 @gogagaga.command()
 @commands.cooldown(1, 5, commands.BucketType.user)
