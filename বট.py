@@ -5,6 +5,29 @@ import os
 from threading import Thread
 from flask import Flask
 from google import genai
+import asyncio
+import aiohttp
+from discord.ext import tasks
+
+
+# Add your Render app URL here
+@tasks.loop(minutes=10)
+async def keep_app_awake():
+  url = "https://my-bot-1-mntj.onrender.com/"
+  try:
+    async with aiohttp.ClientSession() as session:
+      async with session.get(url) as response:
+        print(f"Self-ping status: {response.status}")
+  except Exception as e:
+    print(f"Self-ping failed: {e}")
+
+
+@gogagaga.event
+async def on_ready():
+  print(f"Logged in as {gogagaga.user}")
+  if not keep_app_awake.is_running():
+    keep_app_awake.start()
+	  
 app = Flask('')
 
 
@@ -306,7 +329,14 @@ client = genai.Client(
     api_key=GEMINI_API_KEY
 )
 
-AI_MODEL = "gemini-3.6-flash"
+AI_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-2.5-flash",
+]
 
 
 # ==========================================
@@ -358,18 +388,7 @@ async def on_message(message):
 
         async with message.channel.typing():
 
-            try:
-
-                print(
-                    f"🤖 Gemini request: "
-                    f"{message.author} → {user_prompt}"
-                )
-
-                response = client.models.generate_content(
-                    model=AI_MODEL,
-                    contents=user_prompt
-                )
-
+            
                 # ==========================================
                 # CHECK GEMINI RESPONSE
                 # ==========================================
@@ -427,7 +446,47 @@ async def on_message(message):
             # ==========================================
             # ERROR HANDLING
             # ==========================================
+            try:
 
+            print(
+                f" Gemini request: "
+                f"{message.author} - {user_prompt}"
+            )
+
+            response = None
+            last_error = None
+            used_model = None
+
+            for model_name in AI_MODELS:
+                try:
+                    print(f"Trying model: {model_name}")
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=user_prompt
+                    )
+                    used_model = model_name
+                    print(f"Model worked: {model_name}")
+                    break
+                except Exception as model_error:
+                    error_text = str(model_error).lower()
+                    last_error = model_error
+                    print(f"Model failed: {model_name} -> {model_error}")
+
+                    # Only switch model on busy / unavailable errors
+                    if (
+                        "503" in error_text
+                        or "unavailable" in error_text
+                        or "high demand" in error_text
+                        or "overloaded" in error_text
+                        or "resource exhausted" in error_text
+                        or "429" in error_text
+                    ):
+                        continue
+                    else:
+                        raise model_error
+
+            if response is None:
+                raise last_error
             except Exception as e:
 
                 print("================================")
