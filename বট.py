@@ -76,30 +76,52 @@ async def ping(ctx):
 
 	
 # Warn Command
+
+# ==========================================
+# 1. DELETE BUTTON VIEW CLASS
+# ==========================================
+class ClearWarnView(discord.ui.View):
+    def __init__(self, user_id):
+        super().__init__(timeout=None)
+        self.user_id = user_id
+
+    @discord.ui.button(emoji="🗑️", style=discord.ButtonStyle.danger)
+    async def delete_warn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # কেবল মডারেটর/এডমিনরা বাটন ব্যবহার করতে পারবে
+        if not interaction.user.guild_permissions.kick_members:
+            await interaction.response.send_message("❌ You don't have permission to clear warnings!", ephemeral=True)
+            return
+
+        if self.user_id in warnings_data and warnings_data[self.user_id]:
+            warnings_data[self.user_id].clear()
+            button.disabled = True
+            await interaction.response.edit_message(content="🗑️ **Warnings have been cleared for this user.**", embed=None, view=self)
+        else:
+            await interaction.response.send_message("No warnings found to clear.", ephemeral=True)
+
+
+# ==========================================
+# 2. WARN COMMAND
+# ==========================================
 @gogagaga.command()
 @commands.has_permissions(kick_members=True)
 async def warn(ctx, member: discord.Member, *, reason="No reason provided"):
     user_id = member.id
+    
     if user_id not in warnings_data:
         warnings_data[user_id] = []
     warnings_data[user_id].append(reason)
-@warn.error
-async def warn_error(ctx, error):
-  if isinstance(error, commands.MissingPermissions):
-    await ctx.send("❌ You don't have permission to use this command!")
-	  
-    # চ্যানেলে দেখানোর এমবেড
+
     embed = discord.Embed(
         title="Warning",
-        description=f"*{member} has been warned.* | {reason}",
-        color=discord.Color.green(),
+        description=f"**{member}** has been warned. | {reason}",
+        color=discord.Color.green()
     )
 
-    # ইউজারের ইনবক্সে (DM) পাঠানোর এমবেড
     dm_embed = discord.Embed(
         title=f"**WARNING FROM {ctx.guild.name}**",
         description=f"You have been warned in {ctx.guild.name} for {reason}",
-        color=discord.Color.green(),
+        color=discord.Color.green()
     )
 
     try:
@@ -107,32 +129,48 @@ async def warn_error(ctx, error):
     except discord.Forbidden:
         pass
 
-
     await ctx.send(embed=embed)
+
+
+@warn.error
+async def warn_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ You don't have permission to use this command!")
+
+
+# ==========================================
+# 3. WARNINGS LIST COMMAND
+# ==========================================
 @gogagaga.command()
 async def warnings(ctx, member: discord.Member = None):
-    # যদি কোনো মেম্বার মেনশন না করা হয়, তবে যে কমান্ড দিয়েছে তার ওয়ার্নিং দেখাবে
     member = member or ctx.author
     user_id = member.id
-    
+
     user_warns = warnings_data.get(user_id, [])
-    
+
     if not user_warns:
         embed = discord.Embed(
             title="Warnings",
-            description=f"*{member.display_name} has no warnings.*",
-            color=discord.Color.blue()
+            description=f"**{member.display_name}** has no warnings.",
+            color=discord.Color.green()
         )
-    else:
-        warn_list = "\n".join([f"{i+1}. {reason}" for i, reason in enumerate(user_warns)])
-        embed = discord.Embed(
-            title=f"Warnings for {member.display_name}",
-            description=f"**Total Warnings:** {len(user_warns)}\n\n{warn_list}",
-            color=discord.Color.gold()
-        )
-        
-    await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
+        return
 
+    warn_text = ""
+    for i, reason in enumerate(user_warns, 1):
+        warn_text += f"**{i}. Reason:** {reason}\n"
+
+    embed = discord.Embed(
+        title=f"Warnings for {member.display_name} ({member.id})",
+        description=warn_text,
+        color=discord.Color.red()
+    )
+    embed.set_footer(text=f"Total Warnings: {len(user_warns)}")
+
+    view = ClearWarnView(user_id=user_id)
+    await ctx.send(embed=embed, view=view)
+			   
 
 # Mute Command
 @gogagaga.command()
