@@ -114,7 +114,7 @@ async def warn(ctx, member: discord.Member, *, reason="No reason provided"):
 
     embed = discord.Embed(
         title="Warning",
-        description=f"**{member}** has been warned. | {reason}",
+        description=f"*{member} has been warned.* | {reason}",
         color=discord.Color.green()
     )
 
