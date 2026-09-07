@@ -505,6 +505,381 @@ async def on_message(message):
                 return
 
     # NORMAL PREFIX COMMANDS
-    await gogagaga.process_commands(message)               
+    await gogagaga.process_commands(message)     
+"""
+Friendly Discord chat bot
+- Waves when a new member joins
+- Can chat without being mentioned
+- Replies in short, human-like messages
+- Uses Gemini with model fallback (same idea as your current bot)
+
+Required Discord Developer Portal intents:
+  - MESSAGE CONTENT INTENT
+  - SERVER MEMBERS INTENT
+  - Presence is not required
+
+Environment variables:
+  DISCORD_TOKEN     = your bot token
+  GEMINI_API_KEY    = your Gemini API key
+  WELCOME_CHANNEL_ID = optional channel id for join waves
+  CHAT_CHANNEL_IDS   = optional comma-separated channel ids
+                       If empty, the bot can chat in any text channel.
+"""
+
+import os
+import re
+import time
+import random
+import asyncio
+from collections import defaultdict
+
+import discord
+from discord.ext import commands
+
+try:
+    from google import genai
+except ImportError:
+    genai = None
+
+
+# =========================
+# CONFIG
+# =========================
+COMMAND_PREFIX = "!"
+
+# If set, join waves go here. If empty, the bot uses the server system channel.
+WELCOME_CHANNEL_ID = int(os.getenv("WELCOME_CHANNEL_ID", "0") or 0)
+
+# Comma-separated channel IDs where the bot may chat without a mention.
+# Leave empty to allow all normal text channels.
+_raw_chat_channels = os.getenv("CHAT_CHANNEL_IDS", "").strip()
+CHAT_CHANNEL_IDS = {
+    int(x.strip()) for x in _raw_chat_channels.split(",") if x.strip().isdigit()
+}
+
+# How often the bot is allowed to talk
+USER_COOLDOWN_SECONDS = 8
+CHANNEL_COOLDOWN_SECONDS = 4
+MAX_REPLY_CHARS = 220
+
+# Chance the bot stays quiet on a random message (feels more human)
+SKIP_CHANCE = 0.18
+
+AI_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+]
+
+SYSTEM_STYLE = """
+You are a friendly Discord server member, not a formal assistant.
+Talk like a real person in a casual chat.
+
+Rules:
+- Keep replies very short: 1 or 2 sentences, usually under 25 words.
+- Sound natural. Use simple words.
+- You can wave, say hey, ask a small question, or react to what they said.
+- Do not use markdown, titles, bullet lists, or long explanations.
+- Do not say you are an AI unless asked.
+- Stay kind, helpful, and family-friendly.
+- No adult content, no insults, no private info requests.
+- If someone just said hi, greet them back briefly.
+- If you are welcoming a new member, be warm and short.
+""".strip()
+
+
+# =========================
+# BOT SETUP
+# =========================
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+intents.guilds = True
+
+bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents, help_command=None)
+
+# channel_id -> True/False. Default: chat is ON
+chat_enabled = defaultdict(lambda: True)
+last_user_reply = {}      # user_id -> timestamp
+last_channel_reply = {}   # channel_id -> timestamp
+recent_joins = {}         # user_id -> timestamp, so the bot can keep chatting a bit after join
+
+client = None
+if genai is not None and os.getenv("GEMINI_API_KEY"):
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+
+# =========================
+# HELPERS
+# =========================
+def clean_mention(text: str, user_id: int) -> str:
+    text = text.replace(f"<@{user_id}>", "")
+    text = text.replace(f"<@!{user_id}>", "")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def looks_like_command(content: str) -> bool:
+    return content.startswith(COMMAND_PREFIX)
+
+
+def allowed_chat_channel(channel: discord.abc.Messageable) -> bool:
+    if not isinstance(channel, discord.TextChannel):
+        return False
+    if CHAT_CHANNEL_IDS:
+        return channel.id in CHAT_CHANNEL_IDS
+    return True
+
+
+def on_cooldown(user_id: int, channel_id: int) -> bool:
+    now = time.time()
+    if now - last_user_reply.get(user_id, 0) < USER_COOLDOWN_SECONDS:
+        return True
+    if now - last_channel_reply.get(channel_id, 0) < CHANNEL_COOLDOWN_SECONDS:
+        return True
+    return False
+
+
+def mark_replied(user_id: int, channel_id: int) -> None:
+    now = time.time()
+    last_user_reply[user_id] = now
+    last_channel_reply[channel_id] = now
+
+
+def should_talk(message: discord.Message, mentioned: bool) -> bool:
+    content = message.content.strip()
+
+    if mentioned:
+        return True
+
+    # Keep chatting a little after someone just joined
+    if message.author.id in recent_joins and time.time() - recent_joins[message.author.id] < 15 * 60:
+        return True
+
+    # Greetings and direct-ish chat
+    lowered = content.lower()
+    greetings = (
+        "hi", "hey", "hello", "yo", "sup", "hola", "good morning",
+        "good night", "gm", "gn", "whats up", "what's up", "how are you",
+        "wyd", "anyone here", "is anyone",
+    )
+    if any(lowered == g or lowered.startswith(g + " ") or lowered.startswith(g + ",") for g in greetings):
+        return True
+
+    # Ignore super short noise like "ok", "k", emojis-only unless mentioned
+    if len(content) < 3:
+        return False
+
+    # Sometimes stay quiet so it does not reply to every single message
+    if random.random() < SKIP_CHANCE:
+        return False
+
+    # Skip obvious off-topic spammy stuff
+    if content.startswith("http") or content.count("\n") > 6:
+        return False
+
+    return True
+
+
+async def ask_gemini(prompt: str, extra_context: str = "") -> str:
+    if client is None:
+        return "Heyy, I'm here. My AI key is not set yet though."
+
+    full_prompt = (
+        SYSTEM_STYLE
+        + "\n\n"
+        + (extra_context + "\n\n" if extra_context else "")
+        + "User message:\n"
+        + prompt
+        + "\n\nYour short reply:"
+    )
+
+    last_error = None
+    for model_name in AI_MODELS:
+        try:
+            print(f"Trying model: {model_name}")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=full_prompt,
+            )
+            text = (getattr(response, "text", None) or "").strip()
+            if text:
+                print(f"Model worked: {model_name}")
+                return text[:MAX_REPLY_CHARS]
+        except Exception as model_error:
+            last_error = model_error
+            error_text = str(model_error).lower()
+            print(f"Model failed: {model_name} -> {model_error}")
+            retryable = any(
+                word in error_text
+                for word in ("503", "429", "unavailable", "high demand", "overloaded", "resource exhausted")
+            )
+            if retryable:
+                continue
+            break
+
+    print(f"Gemini error: {last_error}")
+    return "hey, my brain lagged a sec. say that again?"
+
+
+async def send_human_like(channel: discord.abc.Messageable, text: str, mention: discord.Member | None = None):
+    text = re.sub(r"\s+", " ", text).strip()
+    if not text:
+        return
+
+    # Keep it short and casual
+    if len(text) > MAX_REPLY_CHARS:
+        text = text[: MAX_REPLY_CHARS - 3].rsplit(" ", 1)[0] + "..."
+
+    async with channel.typing():
+        await asyncio.sleep(random.uniform(0.7, 1.8))
+        if mention is not None:
+            await channel.send(f"{mention.mention} {text}")
+        else:
+            await channel.send(text)
+
+
+def welcome_channel_for(member: discord.Member) -> discord.TextChannel | None:
+    guild = member.guild
+    if WELCOME_CHANNEL_ID:
+        channel = guild.get_channel(WELCOME_CHANNEL_ID)
+        if isinstance(channel, discord.TextChannel):
+            return channel
+    if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
+        return guild.system_channel
+    for channel in guild.text_channels:
+        if channel.permissions_for(guild.me).send_messages:
+            return channel
+    return None
+
+
+# =========================
+# EVENTS
+# =========================
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user} ({bot.user.id})")
+    print("Chat-without-mention is enabled in allowed channels.")
+    await bot.change_presence(activity=discord.Game(name="chatting around"))
+
+
+@bot.event
+async def on_member_join(member: discord.Member):
+    if member.bot:
+        return
+
+    recent_joins[member.id] = time.time()
+    channel = welcome_channel_for(member)
+    if channel is None:
+        return
+
+    waves = [
+        f"heyyy {member.mention} 👋 welcome in",
+        f"yo {member.mention} welcome 👋",
+        f"waveee {member.mention} glad you joined",
+        f"hey {member.mention} 👋 make yourself at home",
+        f"{member.mention} welcomeee 👋",
+    ]
+    await send_human_like(channel, random.choice(waves).replace(member.mention, "").strip(), mention=member)
+
+    # Small follow-up, like a person would
+    await asyncio.sleep(random.uniform(1.2, 2.5))
+    followups = [
+        "how did you find this server?",
+        "what do you usually hang out for?",
+        "hope you like it here :)",
+        "say hi if you want, i don't bite",
+    ]
+    await send_human_like(channel, random.choice(followups))
+
+
+@bot.event
+async def on_message(message: discord.Message):
+    # Always let prefix commands work
+    await bot.process_commands(message)
+
+    if message.author.bot:
+        return
+    if message.author == bot.user:
+        return
+    if not message.guild:
+        return
+    if looks_like_command(message.content):
+        return
+    if not allowed_chat_channel(message.channel):
+        return
+    if not chat_enabled[message.channel.id]:
+        return
+
+    mentioned = bot.user in message.mentions
+    content = clean_mention(message.content, bot.user.id) if mentioned else message.content.strip()
+
+    if mentioned and not content:
+        await send_human_like(message.channel, random.choice(["heyy", "yo what's up", "yeah?", "i'm here"]), mention=message.author)
+        return
+
+    if not content:
+        return
+
+    if not should_talk(message, mentioned):
+        return
+
+    if on_cooldown(message.author.id, message.channel.id):
+        return
+
+    mark_replied(message.author.id, message.channel.id)
+
+    extra = f"You are talking to {message.author.display_name} in a Discord server named {message.guild.name}."
+    if message.author.id in recent_joins:
+        extra += " This person just joined recently, so be extra welcoming and casual."
+
+    reply = await ask_gemini(content, extra_context=extra)
+    await send_human_like(message.channel, reply)
+
+
+# =========================
+# COMMANDS
+# =========================
+@bot.command(name="chat")
+@commands.has_permissions(manage_channels=True)
+async def chat_toggle(ctx: commands.Context, mode: str = ""):
+    """Turn auto chat on or off in this channel. Usage: !chat on  /  !chat off"""
+    mode = mode.lower().strip()
+    if mode not in {"on", "off"}:
+        state = "on" if chat_enabled[ctx.channel.id] else "off"
+        await ctx.send(f"auto chat is **{state}** here. use `!chat on` or `!chat off`")
+        return
+
+    chat_enabled[ctx.channel.id] = mode == "on"
+    await ctx.send(f"okay, auto chat is **{mode}** in this channel")
+
+
+@bot.command(name="wave")
+async def wave_cmd(ctx: commands.Context, member: discord.Member | None = None):
+    """Wave at someone. Usage: !wave @user"""
+    member = member or ctx.author
+    await send_human_like(ctx.channel, random.choice(["heyyy 👋", "waveee 👋", "yo 👋"]), mention=member)
+
+
+@bot.command(name="ping")
+async def ping_cmd(ctx: commands.Context):
+    await ctx.send(f"pong `{round(bot.latency * 1000)}ms`")
+
+
+@chat_toggle.error
+async def chat_toggle_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("you need manage channels permission for that")
+    else:
+        await ctx.send("that command didn't work")
+
+
+if __name__ == "__main__":
+    token = os.getenv("DISCORD_TOKEN") or os.getenv("YOUR_TOKEN_HERE")
+    if not token:
+        raise SystemExit("Set DISCORD_TOKEN in your environment first.")
+    bot.run(token)
+:
 keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
