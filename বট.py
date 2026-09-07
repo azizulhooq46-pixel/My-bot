@@ -4,11 +4,24 @@ from datetime import timedelta
 import os
 from threading import Thread
 from flask import Flask
-from google import genai
+
 import asyncio
 import aiohttp
 from discord.ext import tasks
 
+import re
+import time
+import random
+
+from collections import defaultdict
+
+
+
+
+try:
+    from google import genai
+except ImportError:
+    genai = None
 
 # Add your Render app URL here
 
@@ -526,20 +539,7 @@ Environment variables:
                        If empty, the bot can chat in any text channel.
 """
 
-import os
-import re
-import time
-import random
-import asyncio
-from collections import defaultdict
 
-import discord
-from discord.ext import commands
-
-try:
-    from google import genai
-except ImportError:
-    genai = None
 
 
 # =========================
