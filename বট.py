@@ -880,6 +880,6 @@ if __name__ == "__main__":
     if not token:
         raise SystemExit("Set DISCORD_TOKEN in your environment first.")
     bot.run(token)
-:
+
 keep_alive()
 gogagaga.run(os.getenv("YOUR_TOKEN_HERE"))
