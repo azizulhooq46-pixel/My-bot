@@ -633,7 +633,7 @@ async def unban(interaction: discord.Interaction, user_id: str):
         await interaction.response.send_message("❌ User ID must be a number.", ephemeral=True)
     except discord.NotFound:
         await interaction.response.send_message("❌ That user can't be banned lol")
-except discord.Forbidden:
+    except discord.Forbidden:
         await interaction.response.send_message("❌ I don't have permission to unban users.", ephemeral=True)
 
 
