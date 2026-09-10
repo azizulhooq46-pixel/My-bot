@@ -151,7 +151,14 @@ if genai is not None and GEMINI_API_KEY:
     except Exception as exc:
         print("Gemini client could not start:", exc)
 
-GEMINI_MODEL = "gemini-3.7-flash"
+GEMINI_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+]
 
 SYSTEM_STYLE = """
 You are Omni Cave, a friendly Discord community bot.
