@@ -31,7 +31,7 @@ except ImportError:
 # in Discord Developer Portal -> Bot -> Privileged Gateway Intents.
 # ============================================================
 
-TOKEN = os.getenv("DISCORD_TOKEN")
+TOKEN = os.getenv("YOUR_TOKEN_HERE")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WELCOME_CHANNEL_ID = int(os.getenv("WELCOME_CHANNEL_ID", "0") or 0)
 
