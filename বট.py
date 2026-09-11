@@ -981,6 +981,556 @@ async def on_app_command_error(
 # ============================================================
 # START
 # ============================================================
+# ============================================================
+# SERVER / USER UTILITIES
+# ============================================================
+
+server_group = app_commands.Group(
+    name="server",
+    description="Server information commands"
+)
+
+@server_group.command(name="info", description="Show information about the server")
+async def server_info(interaction: discord.Interaction):
+    guild = interaction.guild
+
+    embed = discord.Embed(
+        title=f"🏠 {guild.name}",
+        description=guild.description or "No server description.",
+        color=discord.Color.blurple()
+    )
+
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
+
+    embed.add_field(
+        name="👑 Owner",
+        value=f"<@{guild.owner_id}>",
+        inline=True
+    )
+    embed.add_field(
+        name="🆔 Server ID",
+        value=f"`{guild.id}`",
+        inline=True
+    )
+    embed.add_field(
+        name="👥 Members",
+        value=f"`{guild.member_count}`",
+        inline=True
+    )
+    embed.add_field(
+        name="💬 Channels",
+        value=f"`{len(guild.channels)}`",
+        inline=True
+    )
+    embed.add_field(
+        name="🎭 Roles",
+        value=f"`{len(guild.roles)}`",
+        inline=True
+    )
+    embed.add_field(
+        name="🚀 Boost Level",
+        value=f"`{guild.premium_tier}`",
+        inline=True
+    )
+    embed.add_field(
+        name="💎 Boosts",
+        value=f"`{guild.premium_subscription_count}`",
+        inline=True
+    )
+    embed.add_field(
+        name="📅 Created",
+        value=discord.utils.format_dt(guild.created_at, "D"),
+        inline=True
+    )
+
+    await interaction.response.send_message(embed=embed)
+
+
+@server_group.command(name="icon", description="Show the server icon")
+async def server_icon(interaction: discord.Interaction):
+    guild = interaction.guild
+
+    if not guild.icon:
+        await interaction.response.send_message(
+            "❌ This server doesn't have an icon."
+        )
+        return
+
+    embed = discord.Embed(
+        title=f"🖼️ {guild.name} Server Icon",
+        color=discord.Color.blurple()
+    )
+    embed.set_image(url=guild.icon.url)
+
+    await interaction.response.send_message(embed=embed)
+
+
+@server_group.command(name="roles", description="Show all server roles")
+async def server_roles(interaction: discord.Interaction):
+    guild = interaction.guild
+
+    roles = [
+        role.mention
+        for role in reversed(guild.roles)
+        if role != guild.default_role
+    ]
+
+    if not roles:
+        text = "No custom roles."
+    else:
+        text = " ".join(roles)
+
+    if len(text) > 4000:
+        text = text[:3997] + "..."
+
+    embed = discord.Embed(
+        title=f"🎭 {guild.name} Roles",
+        description=text,
+        color=discord.Color.blurple()
+    )
+
+    embed.set_footer(text=f"Total roles: {len(guild.roles) - 1}")
+
+    await interaction.response.send_message(embed=embed)
+
+
+@server_group.command(name="members", description="Show server member statistics")
+async def server_members(interaction: discord.Interaction):
+    guild = interaction.guild
+
+    humans = sum(1 for member in guild.members if not member.bot)
+    bots = sum(1 for member in guild.members if member.bot)
+
+    embed = discord.Embed(
+        title=f"👥 {guild.name} Members",
+        color=discord.Color.green()
+    )
+
+    embed.add_field(
+        name="👤 Humans",
+        value=f"`{humans}`",
+        inline=True
+    )
+    embed.add_field(
+        name="🤖 Bots",
+        value=f"`{bots}`",
+        inline=True
+    )
+    embed.add_field(
+        name="👥 Total",
+        value=f"`{guild.member_count}`",
+        inline=True
+    )
+
+    await interaction.response.send_message(embed=embed)
+
+
+bot.tree.add_command(server_group)
+
+
+@bot.tree.command(name="setnick", description="Change a member's nickname")
+@app_commands.checks.has_permissions(manage_nicknames=True)
+@app_commands.describe(
+    member="Member whose nickname will be changed",
+    nickname="New nickname (leave empty to remove nickname)"
+)
+async def setnick(
+    interaction: discord.Interaction,
+    member: discord.Member,
+    nickname: str | None = None
+):
+    me = interaction.guild.me
+
+    if member == interaction.user:
+        pass
+
+    if member == interaction.guild.owner:
+        await interaction.response.send_message(
+            "❌ You cannot change the server owner's nickname.",
+            ephemeral=True
+        )
+        return
+
+    if me and member.top_role >= me.top_role:
+        await interaction.response.send_message(
+            "❌ I cannot change that member's nickname because their role is higher than or equal to mine.",
+            ephemeral=True
+        )
+        return
+
+    try:
+        old_nick = member.display_name
+        await member.edit(
+            nick=nickname,
+            reason=f"Nickname changed by {interaction.user}"
+        )
+
+        if nickname:
+            await interaction.response.send_message(
+                f"✏️ Changed {member.mention}'s nickname from "
+                f"`{old_nick}` to `{nickname}`."
+            )
+        else:
+            await interaction.response.send_message(
+                f"✏️ Removed {member.mention}'s nickname."
+            )
+
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "❌ I don't have permission to change that nickname.",
+            ephemeral=True
+        )
+
+
+@bot.tree.command(name="avatar", description="Show a user's avatar")
+@app_commands.describe(member="Member whose avatar you want to see")
+async def avatar(
+    interaction: discord.Interaction,
+    member: discord.Member | None = None
+):
+    member = member or interaction.user
+
+    embed = discord.Embed(
+        title=f"🖼️ {member.display_name}'s Avatar",
+        color=member.color if member.color.value else discord.Color.blurple()
+    )
+
+    embed.set_image(url=member.display_avatar.url)
+
+    await interaction.response.send_message(embed=embed)
+
+
+@bot.tree.command(name="clear", description="Delete messages from this channel")
+@app_commands.checks.has_permissions(manage_messages=True)
+@app_commands.describe(amount="Number of messages to delete (1-100)")
+async def clear(
+    interaction: discord.Interaction,
+    amount: app_commands.Range[int, 1, 100]
+):
+    if not isinstance(interaction.channel, discord.TextChannel):
+        await interaction.response.send_message(
+            "❌ This command can only be used in a text channel.",
+            ephemeral=True
+        )
+        return
+
+    await interaction.response.defer(ephemeral=True)
+
+    try:
+        deleted = await interaction.channel.purge(limit=amount)
+
+        await interaction.followup.send(
+            f"🧹 Deleted **{len(deleted)}** messages.",
+            ephemeral=True
+        )
+
+    except discord.Forbidden:
+        await interaction.followup.send(
+            "❌ I don't have permission to delete messages.",
+            ephemeral=True
+        )
+
+
+@bot.tree.command(name="kick", description="Kick a member")
+@app_commands.checks.has_permissions(kick_members=True)
+@app_commands.describe(
+    member="Member to kick",
+    reason="Reason for the kick"
+)
+async def kick(
+    interaction: discord.Interaction,
+    member: discord.Member,
+    reason: str = "No reason provided"
+):
+    if member == interaction.guild.owner:
+        await interaction.response.send_message(
+            "❌ You cannot kick the server owner.",
+            ephemeral=True
+        )
+        return
+
+    if member.top_role >= interaction.guild.me.top_role:
+        await interaction.response.send_message(
+            "❌ I cannot kick that member because their role is higher than or equal to mine.",
+            ephemeral=True
+        )
+        return
+
+    try:
+        try:
+            await member.send(
+                f"👢 You were kicked from **{interaction.guild.name}**.\n"
+                f"Reason: {reason}"
+            )
+        except discord.Forbidden:
+            pass
+
+        await member.kick(reason=reason)
+
+        await interaction.response.send_message(
+            f"👢 **{member}** was kicked.\n**Reason:** {reason}"
+        )
+
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "❌ I couldn't kick that member.",
+            ephemeral=True
+        )
+
+
+@bot.tree.command(name="slowmode", description="Set channel slowmode")
+@app_commands.checks.has_permissions(manage_channels=True)
+@app_commands.describe(
+    seconds="Slowmode delay in seconds (0-21600)"
+)
+async def slowmode(
+    interaction: discord.Interaction,
+    seconds: app_commands.Range[int, 0, 21600]
+):
+    if not isinstance(interaction.channel, discord.TextChannel):
+        await interaction.response.send_message(
+            "❌ This command can only be used in a text channel.",
+            ephemeral=True
+        )
+        return
+
+    try:
+        await interaction.channel.edit(
+            slowmode_delay=seconds,
+            reason=f"Slowmode changed by {interaction.user}"
+        )
+
+        if seconds == 0:
+            await interaction.response.send_message(
+                "🐌 Slowmode has been **disabled**."
+            )
+        else:
+            await interaction.response.send_message(
+                f"🐌 Slowmode set to **{seconds} seconds**."
+            )
+
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "❌ I don't have permission to change slowmode.",
+            ephemeral=True
+        )
+
+
+# ============================================================
+# FUN GAMES
+# ============================================================
+
+@bot.tree.command(name="8ball", description="Ask the magic 8-ball")
+@app_commands.describe(question="Your question")
+async def eight_ball(
+    interaction: discord.Interaction,
+    question: str
+):
+    answers = [
+        "🎱 Absolutely!",
+        "🎱 Yes.",
+        "🎱 Definitely.",
+        "🎱 Most likely.",
+        "🎱 Probably.",
+        "🎱 Maybe...",
+        "🎱 Ask again later.",
+        "🎱 I'm not sure.",
+        "🎱 Probably not.",
+        "🎱 No.",
+        "🎱 Absolutely not!"
+    ]
+
+    await interaction.response.send_message(
+        f"🎱 **Question:** {question}\n"
+        f"**Answer:** {random.choice(answers)}"
+    )
+
+
+@bot.tree.command(name="coinflip", description="Flip a coin")
+async def coinflip(interaction: discord.Interaction):
+    result = random.choice(["Heads 🪙", "Tails 🪙"])
+
+    await interaction.response.send_message(
+        f"🪙 The coin landed on **{result}**!"
+    )
+
+
+@bot.tree.command(name="dice", description="Roll a dice")
+@app_commands.describe(sides="Number of sides (2-100)")
+async def dice(
+    interaction: discord.Interaction,
+    sides: app_commands.Range[int, 2, 100] = 6
+):
+    result = random.randint(1, sides)
+
+    await interaction.response.send_message(
+        f"🎲 You rolled **{result}** on a `{sides}`-sided dice!"
+    )
+
+
+@bot.tree.command(name="rps", description="Play Rock Paper Scissors")
+@app_commands.describe(choice="Choose rock, paper or scissors")
+@app_commands.choices(choice=[
+    app_commands.Choice(name="🪨 Rock", value="rock"),
+    app_commands.Choice(name="📄 Paper", value="paper"),
+    app_commands.Choice(name="✂️ Scissors", value="scissors"),
+])
+async def rps(
+    interaction: discord.Interaction,
+    choice: app_commands.Choice[str]
+):
+    user_choice = choice.value
+    bot_choice = random.choice(["rock", "paper", "scissors"])
+
+    emojis = {
+        "rock": "🪨",
+        "paper": "📄",
+        "scissors": "✂️"
+    }
+
+    if user_choice == bot_choice:
+        result = "🤝 It's a **draw**!"
+
+    elif (
+        (user_choice == "rock" and bot_choice == "scissors")
+        or
+        (user_choice == "paper" and bot_choice == "rock")
+        or
+        (user_choice == "scissors" and bot_choice == "paper")
+    ):
+        result = "🎉 **You win!**"
+
+    else:
+        result = "😂 **I win!**"
+
+    await interaction.response.send_message(
+        f"You: {emojis[user_choice]} **{user_choice.title()}**\n"
+        f"Me: {emojis[bot_choice]} **{bot_choice.title()}**\n\n"
+        f"{result}"
+    )
+
+
+@bot.tree.command(name="slots", description="Play the slot machine")
+async def slots(interaction: discord.Interaction):
+    symbols = ["🍒", "🍋", "🍉", "⭐", "💎", "7️⃣"]
+
+    result = [
+        random.choice(symbols),
+        random.choice(symbols),
+        random.choice(symbols)
+    ]
+
+    if result[0] == result[1] == result[2]:
+        message = "🎉 **JACKPOT! YOU WON!** 💰"
+    elif result[0] == result[1] or result[1] == result[2] or result[0] == result[2]:
+        message = "🔥 **Two matching! Nice!**"
+    else:
+        message = "💀 **No match. Better luck next time!**"
+
+    await interaction.response.send_message(
+        f"🎰 **{result[0]} | {result[1]} | {result[2]}**\n\n{message}"
+    )
+
+
+@bot.tree.command(name="ship", description="Calculate the love compatibility")
+@app_commands.describe(
+    user1="First person",
+    user2="Second person"
+)
+async def ship(
+    interaction: discord.Interaction,
+    user1: discord.Member,
+    user2: discord.Member
+):
+    random.seed(
+        min(user1.id, user2.id) + max(user1.id, user2.id)
+    )
+
+    percentage = random.randint(0, 100)
+
+    random.seed()
+
+    if percentage >= 90:
+        message = "💍 PERFECT MATCH!"
+    elif percentage >= 70:
+        message = "❤️ Very strong!"
+    elif percentage >= 50:
+        message = "💕 There might be something!"
+    elif percentage >= 30:
+        message = "😅 Maybe just friends..."
+    else:
+        message = "💀 Bro, it's over."
+
+    await interaction.response.send_message(
+        f"💘 **{user1.display_name} + {user2.display_name}**\n"
+        f"❤️ Compatibility: **{percentage}%**\n"
+        f"{message}"
+    )
+
+
+@bot.tree.command(name="roast", description="Get a friendly roast")
+@app_commands.describe(member="Member to roast")
+async def roast(
+    interaction: discord.Interaction,
+    member: discord.Member | None = None
+):
+    member = member or interaction.user
+
+    roasts = [
+        "Your Wi-Fi has more personality than you. 💀",
+        "Even Google couldn't find your motivation. 😭",
+        "Bro's loading... please wait. 🗿",
+        "You're not slow, you're just permanently buffering. 😂",
+        "Your NPC energy is unmatched. 🤖",
+        "Even the tutorial gave up on you. 💀",
+        "Bro has 1% battery and 0% brain cells. 😭"
+    ]
+
+    await interaction.response.send_message(
+        f"🔥 {member.mention} {random.choice(roasts)}"
+    )
+
+
+@bot.tree.command(name="compliment", description="Give someone a compliment")
+@app_commands.describe(member="Member to compliment")
+async def compliment(
+    interaction: discord.Interaction,
+    member: discord.Member | None = None
+):
+    member = member or interaction.user
+
+    compliments = [
+        "You're actually awesome. 🔥",
+        "You make the server better just by being here. ❤️",
+        "Your vibe is immaculate. ✨",
+        "You're a legend fr. 👑",
+        "You've got main-character energy. 😎",
+        "You're more useful than a 100% charged phone. 🔋",
+        "Certified W human. 🗿"
+    ]
+
+    await interaction.response.send_message(
+        f"✨ {member.mention} {random.choice(compliments)}"
+    )
+
+
+@bot.tree.command(name="guess", description="Guess a number from 1 to 10")
+@app_commands.describe(number="Your guess")
+async def guess(
+    interaction: discord.Interaction,
+    number: app_commands.Range[int, 1, 10]
+):
+    answer = random.randint(1, 10)
+
+    if number == answer:
+        result = "🎉 **Correct! You got it!**"
+    else:
+        result = f"❌ Nope! The number was **{answer}**."
+
+    await interaction.response.send_message(
+        f"🔢 You guessed **{number}**.\n{result}"
+)
 if __name__ == "__main__":
     keep_alive()
     bot.run(TOKEN)                                                
