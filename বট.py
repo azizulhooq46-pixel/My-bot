@@ -175,7 +175,7 @@ async def ask_ai(prompt: str, extra_context: str = "") -> str:
     try:
         response = await asyncio.to_thread(
             gemini.models.generate_content,
-            model=GEMINI_MODEL,
+            model=GEMINI_MODELS,
             contents=full_prompt,
         )
         text = (getattr(response, "text", None) or "").strip()
