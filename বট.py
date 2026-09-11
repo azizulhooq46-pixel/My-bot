@@ -165,21 +165,88 @@ Do not claim to be human. Do not request private information.
 """
 
 async def ask_ai(prompt: str, extra_context: str = "") -> str:
+    # Check Gemini client
     if gemini is None:
-        return "My AI is not configured yet. Add GEMINI_API_KEY in Render."
+        if genai is None:
+            return (
+                "❌ **AI Setup Error**\n"
+                "**Problem:** `google-genai` is not installed.\n\n"
+                "Check your `requirements.txt`."
+            )
 
-    full_prompt = f"{SYSTEM_STYLE}\n\n{extra_context}\n\nUser:\n{prompt}"
-    try:
-        response = await asyncio.to_thread(
-            gemini.models.generate_content,
-            model=GEMINI_MODELS,
-            contents=full_prompt,
+        if not GEMINI_API_KEY:
+            return (
+                "❌ **AI Configuration Error**\n"
+                "**Problem:** `GEMINI_API_KEY` is missing.\n\n"
+                "Add `GEMINI_API_KEY` to Render → Environment Variables."
+            )
+
+        return (
+            "❌ **AI Client Error**\n"
+            "The Gemini client could not be initialized.\n\n"
+            "Check the Render logs for the initialization error."
         )
-        text = (getattr(response, "text", None) or "").strip()
-        return text[:3900] if text else "I didn't get a response from Gemini."
-    except Exception as exc:
-        print("Gemini error:", exc)
-        return "⚠️ My AI brain hit an error. Try again in a moment."
+
+    full_prompt = (
+        f"{SYSTEM_STYLE}\n\n"
+        f"{extra_context}\n\n"
+        f"User:\n{prompt}"
+    )
+
+    errors = []
+
+    # Try each model separately
+    for model_name in GEMINI_MODELS:
+        try:
+            print(f"🤖 Trying model: {model_name}")
+
+            response = await asyncio.to_thread(
+                gemini.models.generate_content,
+                model=model_name,
+                contents=full_prompt,
+            )
+
+            text = (getattr(response, "text", None) or "").strip()
+
+            if text:
+                print(f"✅ SUCCESS: {model_name}")
+                return text[:3900]
+
+            error = "Gemini returned an empty response."
+            print(f"⚠️ {model_name}: {error}")
+
+            errors.append(
+                f"{model_name}: {error}"
+            )
+
+        except Exception as exc:
+            error_type = type(exc).__name__
+            error_message = str(exc)
+
+            print("=" * 60)
+            print("❌ GEMINI ERROR")
+            print(f"Model: {model_name}")
+            print(f"Error type: {error_type}")
+            print(f"Error: {error_message}")
+            print("=" * 60)
+
+            errors.append(
+                f"{model_name}\n"
+                f"Type: {error_type}\n"
+                f"Error: {error_message}"
+            )
+
+            continue
+
+    # Every model failed
+    error_text = "\n\n".join(errors)
+
+    return (
+        "❌ **Omni Cave AI Error**\n\n"
+        "All Gemini models failed.\n\n"
+        f"```text\n{error_text[:3000]}\n```\n\n"
+        "🔧 Check Render logs for the complete error."
+            )
 
 
 # ============================================================
