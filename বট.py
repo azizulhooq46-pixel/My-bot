@@ -463,7 +463,7 @@ async def on_message(message: discord.Message):
         await message.channel.send(reply[:1000])
     except discord.Forbidden:
         pass
-
+    await bot.process_commands(message)
 
 # ============================================================
 # BASIC SLASH COMMANDS
