@@ -299,7 +299,15 @@ def add_xp(guild_id, user_id, amount):
 
     return xp, level, leveled_up
 
+@bot.event
+async def on_message(message: discord.Message):
+    if message.author.bot or not message.guild:
+        return
 
+    await bot.process_commands(message)
+
+    # XP
+    key = (message.guild.id, message.author.id)
 # ============================================================
 # EVENTS
 # ============================================================
@@ -401,8 +409,7 @@ async def on_message(message: discord.Message):
                 pass
 
     # AI auto-chat / mention chat
-    if message.content.startswith("!") or message.content.startswith("/"):
-        return
+    
 
     mentioned = bot.user in message.mentions if bot.user else False
 
