@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Omni Cave — Discord Bot</title>
+<style>
+:root{--bg:#090b12;--card:#111522;--card2:#171c2b;--text:#f5f7ff;--muted:#aeb6cc;--accent:#7c5cff;--accent2:#29d3a2;--danger:#ff5d73}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#17142d 0,#090b12 45%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+a{text-decoration:none;color:inherit}.wrap{max-width:1100px;margin:auto;padding:28px 18px 70px}
+nav{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:70px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px}.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#24c9ff);font-weight:900;box-shadow:0 10px 30px #0008}
+.navlinks{display:flex;gap:10px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:12px;background:var(--card2);border:1px solid #ffffff18;font-weight:700;cursor:pointer;transition:.2s}.btn:hover{transform:translateY(-2px);border-color:#ffffff35}.primary{background:linear-gradient(135deg,var(--accent),#5d78ff);border:0}.green{background:linear-gradient(135deg,#1cbb91,#28d3a2);color:#06130f;border:0}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}.eyebrow{color:#a995ff;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:13px}.hero h1{font-size:clamp(42px,7vw,78px);line-height:.98;margin:12px 0 18px}.hero p{font-size:18px;line-height:1.6;color:var(--muted);max-width:680px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:25px}
+.heroCard{background:linear-gradient(145deg,#17152b,#0e111b);border:1px solid #ffffff12;border-radius:28px;padding:25px;box-shadow:0 30px 80px #0007}.biglogo{width:170px;height:170px;border-radius:45px;margin:auto;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#20d5ff);font-size:64px;font-weight:950;box-shadow:0 25px 70px #5f4cff55}.status{display:flex;gap:8px;align-items:center;margin-top:22px;color:#b9c1d8}.dot{width:10px;height:10px;border-radius:50%;background:var(--accent2);box-shadow:0 0 15px var(--accent2)}
+section{margin-top:80px}h2{font-size:32px;margin-bottom:10px}.sub{color:var(--muted);line-height:1.6}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:25px}.card{background:var(--card);border:1px solid #ffffff10;border-radius:20px;padding:22px}.icon{font-size:30px}.card h3{margin:12px 0 7px}.card p{color:var(--muted);line-height:1.55;margin:0}
+.commands{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:25px}.cmd{background:var(--card);border:1px solid #ffffff10;border-radius:16px;padding:16px}.cmd code{color:#c4b7ff;font-weight:800}.cmd span{display:block;color:var(--muted);margin-top:5px}
+.cta{margin-top:70px;padding:32px;border-radius:25px;background:linear-gradient(135deg,#1a1732,#101724);border:1px solid #ffffff12;display:flex;justify-content:space-between;gap:20px;align-items:center}.cta p{color:var(--muted);margin:8px 0 0}
+footer{margin-top:70px;color:#7e879d;text-align:center;font-size:14px}
+@media(max-width:800px){.hero{grid-template-columns:1fr}.heroCard{max-width:360px;margin:auto}.grid{grid-template-columns:1fr}.commands{grid-template-columns:1fr}.navlinks{display:none}.cta{display:block}.cta .btn{margin-top:18px}}
+</style>
+</head>
+<body>
+<img src="omni-cave-logo.webp" alt="Omni Cave logo" class="hero-logo">
+<div class="wrap">
+<nav>
+  <a class="brand" href="#"><span class="logo">OC</span><span>Omni Cave</span></a>
+  <div class="navlinks">
+    <a class="btn" href="#features">Features</a>
+    <a class="btn" href="#commands">Commands</a>
+    <a class="btn primary" target="_blank" href="https://discord.com/oauth2/authorize?client_id=1523511453527576606&permissions=1099780451414&integration_type=0&scope=bot%20applications.commands">Add to Discord</a>
+  </div>
+</nav>
+
+<main>
+<section class="hero" style="margin-top:0">
+  <div>
+    <div class="eyebrow">Discord community bot</div>
+    <h1>One bot.<br>Whole cave.</h1>
+    <p>Omni Cave brings moderation, QOTD, AI, leveling, welcome messages and useful server tools into one clean Discord bot.</p>
+    <div class="actions">
+      <a class="btn primary" target="_blank" href="https://discord.com/oauth2/authorize?client_id=1523511453527576606&permissions=1099780451414&integration_type=0&scope=bot%20applications.commands">➕ Add Omni Cave</a>
+      <a class="btn" target="_blank" href="https://discord.gg/4gUCxa6pbe">💬 Join Omni Cave</a>
+      <a class="btn green" href="#commands">⚡ View Commands</a>
+    </div>
+  </div>
+  <div class="heroCard">
+    <div class="biglogo">OC</div>
+    <div class="status"><span class="dot"></span><span>Dashboard online</span></div>
+  </div>
+</section>
+
+<section id="features">
+<h2>Features</h2>
+<p class="sub">The Discord menu uses real interaction buttons and modals, so these aren't dead website buttons.</p>
+<div class="grid">
+  <div class="card"><div class="icon">🛡️</div><h3>Moderation</h3><p>Warn, mute, ban, unban, roles and warning history with permission checks.</p></div>
+  <div class="card"><div class="icon">🗣️</div><h3>QOTD</h3><p>Set a QOTD channel, post questions, and get random questions from the interactive menu.</p></div>
+  <div class="card"><div class="icon">✨</div><h3>Ask AI</h3><p>Open an AI question modal from Discord or use <code>/ai</code>.</p></div>
+  <div class="card"><div class="icon">🏆</div><h3>Leveling</h3><p>Earn XP from chatting, level up, and view the server leaderboard.</p></div>
+  <div class="card"><div class="icon">👋</div><h3>Welcome</h3><p>Automatic welcome and goodbye messages with configurable channels.</p></div>
+  <div class="card"><div class="icon">⚡</div><h3>Slash Commands</h3><p>Modern Discord slash commands plus prefix compatibility for common commands.</p></div>
+</div>
+</section>
+
+<section id="commands">
+<h2>Commands</h2>
+<p class="sub">After inviting the bot, type <strong>/help</strong> in your server. The buttons inside that menu are connected to the bot.</p>
+<div class="commands">
+  <div class="cmd"><code>/help</code><span>Open the interactive Omni Cave menu.</span></div>
+  <div class="cmd"><code>/ai question:</code><span>Ask Omni Cave AI.</span></div>
+  <div class="cmd"><code>/warn member: reason:</code><span>Warn a member.</span></div>
+  <div class="cmd"><code>/warnings member:</code><span>View warning history.</span></div>
+  <div class="cmd"><code>/mute member: duration:</code><span>Timeout a member.</span></div>
+  <div class="cmd"><code>/ban member:</code><span>Ban a member.</span></div>
+  <div class="cmd"><code>/unban user_id:</code><span>Unban by Discord user ID.</span></div>
+  <div class="cmd"><code>/role member: role:</code><span>Add or remove a role.</span></div>
+  <div class="cmd"><code>/level</code><span>View XP and level.</span></div>
+  <div class="cmd"><code>/leaderboard</code><span>View the top 10.</span></div>
+  <div class="cmd"><code>/setqotd channel:</code><span>Choose the QOTD channel.</span></div>
+  <div class="cmd"><code>/qotd</code><span>Post today's QOTD.</span></div>
+</div>
+</section>
+
+<div class="cta">
+  <div><h2 style="margin:0">Ready to enter the cave?</h2><p>Add the bot, then type <strong>/help</strong> in Discord.</p></div>
+  <a class="btn primary" target="_blank" href="https://discord.com/oauth2/authorize?client_id=1523511453527576606&permissions=1099780451414&integration_type=0&scope=bot%20applications.commands">Add Omni Cave</a>
+</div>
+</main>
+
+<footer>© 2026 Omni Cave • Built for Discord communities</footer>
+</div>
+</body>
+</html>
