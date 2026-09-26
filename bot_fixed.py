@@ -65,10 +65,15 @@ def home():
     return "Omni Cave is online! 🤖"
 
 
+
 def run_web():
     port = int(os.getenv("PORT", "10000"))
-    app.run(host="0.0.0.0", port=port)
-
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
 
 def keep_alive():
     Thread(target=run_web, daemon=True).start()
