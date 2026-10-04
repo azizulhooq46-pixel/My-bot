@@ -531,12 +531,117 @@ async def clearwarnings(ctx,member:discord.Member):
 @bot.hybrid_command(name="mute",description="Timeout a member. Duration like 10m, 2h or 1d.")
 @commands.guild_only()
 @commands.has_guild_permissions(moderate_members=True)
-async def mute(ctx,member:discord.Member,duration:str,*,reason:str="No reason provided"):
-    m=re.fullmatch(r"(\d+)\s*(m|h|d)?",duration.lower().strip())
-    if not m:return await ctx.send("Use a duration like `10m`, `2h`, or `1d`.")
-    amount=int(m.group(1)); mult={"m":1,"h":60,"d":1440}.get(m.group(2) or "m",1); minutes=amount*mult
-    if minutes>40320:return await ctx.send("Discord's timeout limit is 28 days.")
-    await member.timeout(discord.utils.utcnow()+__import__('datetime').timedelta(minutes=minutes),reason=reason); await ctx.send(f"🔇 Timed out {member.mention} for `{duration}`.")
+@bot.hybrid_command(
+    name="mute",
+    description="Timeout a member. Examples: 10m, 10min, 2h, 1d."
+)
+@commands.guild_only()
+@commands.has_guild_permissions(moderate_members=True)
+async def mute(
+    ctx,
+    member: discord.Member,
+    duration: str,
+    *,
+    reason: str = "No reason provided"
+):
+    # Don't allow bots to be timed out
+    if member.bot:
+        return await ctx.send("❌ You can't timeout a bot.")
+
+    # Don't allow timing out yourself
+    if member.id == ctx.author.id:
+        return await ctx.send("❌ You can't timeout yourself.")
+
+    # Don't allow timing out the server owner
+    if member.id == ctx.guild.owner_id:
+        return await ctx.send("❌ You can't timeout the server owner.")
+
+    # Check role hierarchy
+    bot_member = ctx.guild.me
+
+    if bot_member is None:
+        return await ctx.send("❌ I couldn't determine my server role.")
+
+    if member.top_role >= bot_member.top_role:
+        return await ctx.send(
+            "❌ I can't timeout this member because their highest role "
+            "is equal to or higher than mine."
+        )
+
+    # Accept:
+    # 10m, 10min, 10minute, 10minutes
+    # 2h, 2hr, 2hour, 2hours
+    # 1d, 1day, 1days
+    match = re.fullmatch(
+        r"(\d+)\s*"
+        r"(m|min|minute|minutes|"
+        r"h|hr|hour|hours|"
+        r"d|day|days)",
+        duration.lower().strip()
+    )
+
+    if not match:
+        return await ctx.send(
+            "❌ Invalid duration.\n"
+            "Use something like `10m`, `10min`, `2h`, `2hours`, or `1d`."
+        )
+
+    amount = int(match.group(1))
+    unit = match.group(2)
+
+    # Convert everything to minutes
+    if unit in ("m", "min", "minute", "minutes"):
+        minutes = amount
+
+    elif unit in ("h", "hr", "hour", "hours"):
+        minutes = amount * 60
+
+    else:
+        minutes = amount * 1440
+
+    # Discord maximum timeout = 28 days
+    if minutes > 40320:
+        return await ctx.send(
+            "❌ Discord's maximum timeout is **28 days**."
+        )
+
+    if minutes <= 0:
+        return await ctx.send(
+            "❌ The duration must be greater than 0."
+        )
+
+    # Apply timeout
+    try:
+        until = discord.utils.utcnow() + __import__("datetime").timedelta(
+            minutes=minutes
+        )
+
+        await member.timeout(
+            until,
+            reason=reason
+        )
+
+        await ctx.send(
+            f"🔇 Timed out {member.mention} for **{duration}**.\n"
+            f"📝 Reason: {reason}"
+        )
+
+    except discord.Forbidden:
+        await ctx.send(
+            "❌ Discord refused the timeout. "
+            "Check my **Moderate Members** permission and role position."
+        )
+
+    except discord.HTTPException as e:
+        await ctx.send(
+            f"❌ Discord returned an error while timing out the member: `{e}`"
+        )
+
+    except Exception as e:
+        print(f"Mute error: {type(e).__name__}: {e}")
+        await ctx.send(
+            "⚠️ Something unexpected went wrong while timing out the member."
+        )
 
 @bot.hybrid_command(name="kick",description="Kick a member.")
 @commands.guild_only()
