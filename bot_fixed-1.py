@@ -528,9 +528,7 @@ async def clearwarnings(ctx,member:discord.Member):
     with db: cur=db.execute("DELETE FROM warnings WHERE guild_id=? AND user_id=?",(ctx.guild.id,member.id))
     await ctx.send(f"🗑️ Deleted {cur.rowcount} warning(s) for {member.mention}.")
 
-@bot.hybrid_command(name="mute",description="Timeout a member. Duration like 10m, 2h or 1d.")
-@commands.guild_only()
-@commands.has_guild_permissions(moderate_members=True)
+
 @bot.hybrid_command(
     name="mute",
     description="Timeout a member. Examples: 10m, 10min, 2h, 1d."
