@@ -6,8 +6,7 @@ from typing import Optional
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-from flask import Flask
-
+from flask import Flask, send_from_directory
 try:
     from google import genai
 except ImportError:
@@ -32,9 +31,11 @@ if not TOKEN:
 
 # ---------------- Render health server ----------------
 app = Flask(__name__)
+
+
 @app.get("/")
 def home():
-    return "Omni Cave is online! 🤖"
+    return send_from_directory(".", "index.html")
 @app.get("/health")
 def health():
     return {"status": "online", "bot": "Omni Cave"}
