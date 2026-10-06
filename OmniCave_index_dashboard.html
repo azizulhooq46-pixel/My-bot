@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090b12">
+<title>Omni Cave — Discord Dashboard</title>
+<style>
+:root{--bg:#080a10;--panel:#10131c;--panel2:#151925;--panel3:#1a1f2d;--text:#f5f7ff;--muted:#98a2ba;--line:#ffffff12;--purple:#7c5cff;--purple2:#9b7cff;--green:#2dd4a5;--red:#ff647c;--blue:#5f8dff;--shadow:0 24px 70px #0008}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(900px 500px at 70% -10%,#2a1b55 0,transparent 65%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{text-decoration:none;color:inherit}button{font:inherit;color:inherit}.app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.sidebar{position:sticky;top:0;height:100vh;padding:22px 16px;border-right:1px solid var(--line);background:#0b0d14eF;backdrop-filter:blur(18px)}.brand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:18px;margin-bottom:30px}.logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--purple),#28cfff);box-shadow:0 12px 30px #6c4cff55;font-weight:950}.side-title{font-size:11px;color:#69738b;text-transform:uppercase;letter-spacing:.13em;font-weight:900;margin:22px 10px 8px}.nav{display:grid;gap:5px}.nav a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;color:#aeb6ca;font-weight:700}.nav a:hover,.nav a.active{background:#ffffff0b;color:#fff}.side-bottom{position:absolute;left:16px;right:16px;bottom:18px;display:grid;gap:9px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);font-weight:800;cursor:pointer;transition:.18s}.btn:hover{transform:translateY(-1px);border-color:#ffffff2c}.primary{background:linear-gradient(135deg,var(--purple),#5d79ff);border:0}.green{background:linear-gradient(135deg,#1caf8d,var(--green));color:#06120e;border:0}.main{min-width:0}.topbar{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;background:#080a10d9;backdrop-filter:blur(18px);z-index:5}.crumb{color:var(--muted);font-size:14px}.top-actions{display:flex;gap:8px;align-items:center}.mobile-menu{display:none}.content{max-width:1250px;margin:auto;padding:34px 30px 70px}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:25px;margin-bottom:26px}.eyebrow{color:#a997ff;font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}.hero h1{font-size:clamp(34px,5vw,56px);line-height:1;margin:8px 0 12px}.hero p{color:var(--muted);max-width:720px;line-height:1.65;margin:0}.hero-actions{display:flex;gap:9px;flex-wrap:wrap}.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,1fr)}.card{background:linear-gradient(145deg,var(--panel),#0e1119);border:1px solid var(--line);border-radius:17px;padding:20px;box-shadow:0 12px 35px #0003}.stat-label{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}.stat{font-size:29px;font-weight:950;margin-top:8px}.ok{color:var(--green)}.purple{color:#b39fff}.section{margin-top:28px}.section-head{display:flex;justify-content:space-between;gap:15px;align-items:end;margin-bottom:13px}.section h2{font-size:23px;margin:0}.section-head p{margin:5px 0 0;color:var(--muted);font-size:14px}.two{grid-template-columns:1.2fr .8fr}.feature-grid{grid-template-columns:repeat(3,1fr)}.feature{min-height:160px}.icon{font-size:27px}.feature h3{margin:12px 0 7px}.feature p{color:var(--muted);line-height:1.55;margin:0;font-size:14px}.setting-list{display:grid;gap:9px}.setting{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid var(--line)}.setting:last-child{border-bottom:0}.setting b{display:block;font-size:14px}.setting span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.pill{padding:6px 9px;border-radius:999px;background:#ffffff09;border:1px solid var(--line);font-size:11px;font-weight:900;color:#c5ccdc}.pill.on{color:#7ef0c9;background:#2dd4a510;border-color:#2dd4a530}.commands{grid-template-columns:repeat(3,1fr)}.cmd{padding:15px;border:1px solid var(--line);background:var(--panel);border-radius:13px}.cmd code{font-weight:900;color:#c4b4ff}.cmd p{color:var(--muted);font-size:12px;margin:6px 0 0;line-height:1.45}.join{margin-top:30px;padding:26px;border-radius:19px;border:1px solid #7c5cff35;background:linear-gradient(135deg,#171331,#10151f);display:flex;justify-content:space-between;align-items:center;gap:20px}.join h2{margin:0 0 6px}.join p{margin:0;color:var(--muted)}footer{text-align:center;color:#667087;font-size:12px;margin-top:35px;padding-top:22px;border-top:1px solid var(--line)}.tag{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#2dd4a510;color:#79e9c5;border:1px solid #2dd4a526;font-size:12px;font-weight:900}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.feature-grid{grid-template-columns:repeat(2,1fr)}.commands{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.app{display:block}.sidebar{display:none}.topbar{height:64px;padding:0 16px}.mobile-menu{display:inline-flex}.content{padding:25px 16px 55px}.hero{display:block}.hero-actions{margin-top:18px}.stats,.two,.feature-grid,.commands{grid-template-columns:1fr}.card{padding:17px}.join{display:block}.join .btn{margin-top:16px;width:100%}}
+</style>
+
+<style>
+.control-btn,.dash-value{cursor:pointer}.dash-value{border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}.feature-btn{display:block;width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer}.feature-btn:hover{transform:translateY(-2px);border-color:#ffffff30}.modal-backdrop{position:fixed;inset:0;background:#000b;backdrop-filter:blur(9px);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modal-backdrop.show{display:flex}.modal{position:relative;width:min(620px,100%);max-height:90vh;overflow:auto;background:#10131c;border:1px solid #ffffff1b;border-radius:20px;padding:24px;box-shadow:0 35px 100px #000c}.modal h2{margin:0 0 8px}.modal-x{position:absolute;right:14px;top:10px;border:0;background:transparent;color:#9da6bb;font-size:30px;cursor:pointer}.modal label{display:block;margin:14px 0;font-weight:800}.field{display:block;width:100%;margin-top:7px;padding:12px 13px;border-radius:11px;border:1px solid #ffffff18;background:#0a0d14;color:#f5f7ff;outline:none}.field:focus{border-color:#7c5cff88}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.check{display:flex!important;gap:9px;align-items:center}.muted{color:var(--muted);line-height:1.6}.info-box{background:#ffffff06;border:1px solid var(--line);padding:14px;border-radius:12px;line-height:1.6}.rr-list{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#151b28;border:1px solid #ffffff18;border-radius:12px;padding:12px 16px;z-index:120;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}.toast.bad{border-color:#ff647c55;color:#ff9bad}.mobile-open{display:block!important;position:fixed!important;z-index:90!important;top:64px!important;left:0!important;bottom:0!important;width:270px!important}.mobile-open .nav{display:grid}.server-select{max-width:190px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <a class="brand" href="#overview"><span class="logo">OC</span><span>Omni Cave</span></a>
+  <div class="side-title">Dashboard</div>
+  <nav class="nav">
+    <a class="active" href="#overview">🏠 Overview</a>
+    <a href="#general">⚙️ General</a>
+    <a href="#welcome">👋 Welcome</a>
+    <a href="#moderation">🛡️ Moderation</a>
+    <a href="#leveling">🏆 Leveling</a>
+    <a href="#reaction">🎭 Reaction Roles</a>
+    <a href="#ai">✨ AI</a>
+    <a href="#qotd">💬 QOTD</a>
+    <a href="#commands">⌨️ Commands</a>
+  </nav>
+  <div class="side-title">Community</div>
+  <nav class="nav">
+    <a target="_blank" href="https://discord.gg/PkhTNVymEr">💬 Join Server</a>
+    <a target="_blank" href="https://discord.com/oauth2/authorize?client_id=1523511453527576606&permissions=1099780451414&integration_type=0&scope=bot%20applications.commands">➕ Add Bot</a>
+  </nav>
+  <div class="side-bottom"><a class="btn green" target="_blank" href="https://discord.gg/PkhTNVymEr">Join Omni Cave ↗</a></div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <div class="crumb">Omni Cave / Dashboard</div>
+  <div class="top-actions"><button class="btn" id="loginBtn" type="button">🔐 Login with Discord</button><select class="btn server-select" id="serverSelect" aria-label="Select server"><option>Login to select server</option></select>
+    <button class="btn mobile-menu" id="menuBtn" type="button">☰ Menu</button>
+    <a class="btn" target="_blank" href="https://discord.gg/PkhTNVymEr">Join Server</a>
+    <a class="btn primary" target="_blank" href="https://discord.com/oauth2/authorize?client_id=1523511453527576606&permissions=1099780451414&integration_type=0&scope=bot%20applications.commands">Add Bot</a>
+  </div>
+</header>
+
+<div class="content" id="overview">
+  <section class="hero" style="margin-top:0">
+    <div>
+      <div class="eyebrow">Discord community control center</div>
+      <h1>Welcome to the<br>Omni Cave dashboard.</h1>
+      <p>One place for moderation, welcome messages, leveling, reaction roles, AI, QOTD and the rest of the tools already built into Omni Cave.</p>
+    </div>
+    <div class="hero-actions">
+      <a class="btn green" target="_blank" href="https://discord.gg/PkhTNVymEr">💬 Join Omni Cave</a>
+      <a class="btn primary" target="_blank" href="https://discord.com/oauth2/authorize?client_id=1523511453527576606&permissions=1099780451414&integration_type=0&scope=bot%20applications.commands">➕ Add Omni Cave</a>
+    </div>
+  </section>
+
+  <div class="grid stats">
+    <div class="card"><div class="stat-label">Bot status</div><div class="stat ok" id="botStatus">● Checking…</div></div>
+    <div class="card"><div class="stat-label">Prefix</div><button class="stat purple dash-value" id="prefixValue" type="button">!</button></div>
+    <div class="card"><div class="stat-label">Commands</div><div class="stat" id="commandCount">40+</div></div>
+    <div class="card"><div class="stat-label">AI</div><div class="stat ok">Gemini</div></div>
+  </div>
+
+  <section class="section" id="general">
+    <div class="section-head"><div><h2>General</h2><p>Core server controls and bot information.</p></div><span class="tag"><span class="dot"></span> Bot ready</span></div>
+    <div class="grid two">
+      <div class="card">
+        <div class="setting-list">
+          <div class="setting"><div><b>Command prefix</b><span>Used by prefix-compatible commands.</span></div><button class="pill control-btn" id="prefixBtn" type="button">!</button></div>
+          <div class="setting"><div><b>Slash commands</b><span>Modern Discord command interface.</span></div><button class="pill on control-btn" id="xpBtn" type="button">Enabled</button></div>
+          <div class="setting"><div><b>Message XP</b><span>Members can earn XP while chatting.</span></div><span class="pill on">Enabled</span></div>
+        </div>
+      </div>
+      <div class="card"><div class="stat-label">Quick start</div><h3>Type /help in Discord</h3><p style="color:var(--muted);line-height:1.6">The bot's interactive help menu exposes the available tools. Server settings are currently stored by the bot in SQLite.</p><a class="btn" href="#commands">Explore commands</a></div>
+    </div>
+  </section>
+
+  <section class="section" id="welcome">
+    <div class="section-head"><div><h2>Welcome & Goodbye</h2><p>Keep new members greeted and leaving members acknowledged.</p></div></div>
+    <div class="grid feature-grid">
+      <button class="card feature feature-btn" data-open="welcomeModal"><div class="icon">👋</div><h3>Welcome messages</h3><p>Choose a welcome channel and customize text with placeholders like {mention}, {name}, {server} and {member_count}.</p></button>
+      <button class="card feature feature-btn" data-open="goodbyeModal"><div class="icon">🚪</div><h3>Goodbye messages</h3><p>Send a configurable goodbye message when a member leaves the server.</p></button>
+      <button class="card feature feature-btn" data-open="aiModal"><div class="icon">🤖</div><h3>New-member AI</h3><p>Omni Cave can start a short AI conversation with a newly joined member when the feature is enabled.</p></button>
+    </div>
+  </section>
+
+  <section class="section" id="moderation">
+    <div class="section-head"><div><h2>Moderation</h2><p>Tools already present in the current bot.</p></div></div>
+    <div class="grid feature-grid">
+      <button class="card feature feature-btn" data-open="moderationModal"><div class="icon">⚠️</div><h3>Warnings</h3><p>Warn members, inspect warning history, clear individual warnings or clear all warnings.</p></button>
+      <div class="card feature"><div class="icon">🔇</div><h3>Mute / Timeout</h3><p>Supports durations such as 10m, 10min, 2h and 1d, with Discord permission and hierarchy checks.</p></div>
+      <div class="card feature"><div class="icon">🔨</div><h3>Kick & Ban</h3><p>Kick, ban and unban members with the bot's existing permission safeguards.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="leveling">
+    <div class="section-head"><div><h2>Leveling</h2><p>XP, ranks and leaderboard tools.</p></div></div>
+    <div class="grid two">
+      <div class="card"><div class="stat-label">Leveling system</div><h3>Chat → XP → Level up</h3><p style="color:var(--muted);line-height:1.6">Members earn XP from messages, can view their rank and can see the server's top members with the leaderboard command.</p></div>
+      <div class="card"><div class="setting-list"><div class="setting"><div><b>Level-up channel</b><span>Configurable per server.</span></div><button class="pill control-btn" id="levelChannelBtn" type="button">Channel</button></div><div class="setting"><div><b>Level-up embed</b><span>Can be enabled or disabled.</span></div><button class="pill control-btn" id="levelEmbedBtn" type="button">Toggle</button></div></div></div>
+    </div>
+  </section>
+
+  <section class="section" id="reaction">
+    <div class="section-head"><div><h2>Reaction Roles</h2><p>Connect emojis to Discord roles.</p></div></div>
+    <div class="card"><p style="color:var(--muted);line-height:1.6;margin:0">Use <code>/reactionrole</code> to configure a channel, message, emoji and role mapping. Existing mappings can be removed with <code>/removereactionrole</code>.</p></div>
+  </section>
+
+  <section class="section" id="ai">
+    <div class="section-head"><div><h2>AI</h2><p>Omni Cave's Gemini-powered assistant.</p></div><span class="tag"><span class="dot"></span> Gemini</span></div>
+    <div class="grid two">
+      <div class="card"><h3>Ask Omni Cave</h3><p style="color:var(--muted);line-height:1.6">Members can use <code>/ai</code>, mention the bot, or reply to the bot for an AI response.</p></div>
+      <div class="card"><h3>Friendly by design</h3><p style="color:var(--muted);line-height:1.6">The current system prompt keeps responses concise, helpful and family-friendly and does not pretend to be human.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="qotd">
+    <div class="section-head"><div><h2>QOTD & Fun</h2><p>Keep the community active.</p></div></div>
+    <div class="grid feature-grid">
+      <div class="card feature"><div class="icon">💬</div><h3>Question of the Day</h3><p>Set a QOTD channel and post a question with <code>/qotd</code>.</p></div>
+      <div class="card feature"><div class="icon">🎂</div><h3>Birthdays</h3><p>Save and check member birthdays with the existing birthday commands.</p></div>
+      <div class="card feature"><div class="icon">🎮</div><h3>Fun commands</h3><p>8ball, coinflip, dice, RPS, slots, ship, roast and compliment are included.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="commands">
+    <div class="section-head"><div><h2>Command explorer</h2><p>Based on the commands in the current Omni Cave bot.</p></div></div>
+    <div class="grid commands">
+      <div class="cmd"><code>/help</code><p>Open the Omni Cave help menu.</p></div>
+      <div class="cmd"><code>/ping</code><p>Check bot latency.</p></div>
+      <div class="cmd"><code>/serverinfo</code><p>Show server information.</p></div>
+      <div class="cmd"><code>/userinfo</code><p>Show member information.</p></div>
+      <div class="cmd"><code>/setprefix</code><p>Change the server prefix.</p></div>
+      <div class="cmd"><code>/ai</code><p>Ask Omni Cave AI.</p></div>
+      <div class="cmd"><code>/warn</code><p>Warn a member.</p></div>
+      <div class="cmd"><code>/warnings</code><p>View warning history.</p></div>
+      <div class="cmd"><code>/clearwarning</code><p>Delete one warning.</p></div>
+      <div class="cmd"><code>/clearwarnings</code><p>Delete all warnings for a member.</p></div>
+      <div class="cmd"><code>/mute</code><p>Timeout a member.</p></div>
+      <div class="cmd"><code>/kick</code><p>Kick a member.</p></div>
+      <div class="cmd"><code>/ban</code><p>Ban a member.</p></div>
+      <div class="cmd"><code>/unban</code><p>Unban by Discord user ID.</p></div>
+      <div class="cmd"><code>/role</code><p>Add or remove a role.</p></div>
+      <div class="cmd"><code>/setnick</code><p>Set a member nickname.</p></div>
+      <div class="cmd"><code>/clear</code><p>Delete 1–100 messages.</p></div>
+      <div class="cmd"><code>/slowmode</code><p>Set channel slowmode.</p></div>
+      <div class="cmd"><code>/reactionrole</code><p>Configure a reaction role.</p></div>
+      <div class="cmd"><code>/rank</code><p>View level and XP.</p></div>
+      <div class="cmd"><code>/leaderboard</code><p>View the top members.</p></div>
+      <div class="cmd"><code>/leveling</code><p>Enable or disable leveling.</p></div>
+      <div class="cmd"><code>/setqotd</code><p>Set the QOTD channel.</p></div>
+      <div class="cmd"><code>/qotd</code><p>Post today's QOTD.</p></div>
+      <div class="cmd"><code>/setbirthday</code><p>Save a birthday.</p></div>
+      <div class="cmd"><code>/birthday</code><p>Check a saved birthday.</p></div>
+      <div class="cmd"><code>/8ball</code><p>Ask the magic 8-ball.</p></div>
+      <div class="cmd"><code>/coinflip</code><p>Flip a coin.</p></div>
+      <div class="cmd"><code>/dice</code><p>Roll a die.</p></div>
+      <div class="cmd"><code>/rps</code><p>Play rock paper scissors.</p></div>
+      <div class="cmd"><code>/slots</code><p>Spin the slots.</p></div>
+      <div class="cmd"><code>/ship</code><p>Ship two members.</p></div>
+      <div class="cmd"><code>/roast</code><p>Give a playful roast.</p></div>
+      <div class="cmd"><code>/compliment</code><p>Give a compliment.</p></div>
+      <div class="cmd"><code>/settings</code><p>Show server bot settings.</p></div>
+    </div>
+  </section>
+
+  <section class="join">
+    <div><h2>Want to enter the Cave?</h2><p>Join the Omni Cave community and see the bot in action.</p></div>
+    <a class="btn green" target="_blank" href="https://discord.gg/PkhTNVymEr">💬 Join Omni Cave Server ↗</a>
+  </section>
+
+  <footer>© 2026 Omni Cave • Discord community bot • <a href="https://discord.gg/PkhTNVymEr" target="_blank">Join the server</a></footer>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-x" id="modalClose" type="button">×</button>
+    <h2 id="modalTitle">Dashboard</h2>
+    <p id="modalHelp" class="muted">Login with Discord and choose a server to manage it.</p>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const state = {me:null,guild:null,settings:null,channels:[],roles:[]};
+  const api = async (url, opts={}) => {
+    const r = await fetch(url, {credentials:'same-origin', ...opts, headers:{'Content-Type':'application/json',...(opts.headers||{})}});
+    let data={}; try{data=await r.json()}catch{}
+    if(!r.ok) throw new Error(data.error || `Request failed (${r.status})`);
+    return data;
+  };
+  const toast = (msg, bad=false) => { const t=$('#toast'); t.textContent=msg; t.className='toast show'+(bad?' bad':''); setTimeout(()=>t.className='toast',2800); };
+  const modal = $('#modalBackdrop');
+  function closeModal(){modal.classList.remove('show');}
+  $('#modalClose').onclick=closeModal;
+  modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+  function openModal(title, help, body){$('#modalTitle').textContent=title;$('#modalHelp').textContent=help||'';$('#modalBody').innerHTML=body;modal.classList.add('show');}
+  const login = () => location.href='/login';
+  $('#loginBtn').onclick=login;
+  $('#menuBtn')?.addEventListener('click',()=>document.querySelector('.sidebar').classList.toggle('mobile-open'));
+
+  async function loadMe(){
+    try{state.me=await api('/api/me');}
+    catch(e){toast(e.message,true);return;}
+    const b=$('#loginBtn');
+    if(state.me.logged_in){b.textContent=`👤 ${state.me.user.username}`;b.onclick=()=>location.href='/logout'; const sel=$('#serverSelect'); sel.innerHTML=''; (state.me.guilds||[]).filter(g=>g.bot_present).forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;sel.appendChild(o)}); sel.onchange=()=>selectGuild(sel.value);}
+    else {b.textContent='🔐 Login with Discord';b.onclick=login;}
+    if(!state.me.logged_in){ $('#serverSelect').innerHTML='<option>Login to select server</option>'; return; }
+    const guilds=state.me.guilds||[];
+    const botGuilds=guilds.filter(g=>g.bot_present);
+    if(!state.guild && botGuilds.length) { $('#serverSelect').value=botGuilds[0].id; await selectGuild(botGuilds[0].id); }
+    if(!botGuilds.length) toast('The bot is not in a server you can manage.',true);
+  }
+
+  async function selectGuild(id){
+    state.guild=(state.me.guilds||[]).find(g=>g.id===String(id));
+    if(!state.guild)return;
+    try{state.settings=await api(`/api/guilds/${id}/settings`); state.channels=await api(`/api/guilds/${id}/channels`); state.roles=await api(`/api/guilds/${id}/roles`); render();}
+    catch(e){toast(e.message,true)}
+  }
+
+  function render(){
+    if(!state.settings)return;
+    const s=state.settings;
+    $('#prefixValue').textContent=s.prefix;
+    $('#prefixBtn').textContent=s.prefix;
+    $('#levelEmbedBtn').textContent=s.level_embed?'Enabled':'Disabled';
+    $('#levelEmbedBtn').classList.toggle('on',!!s.level_embed);
+    $('#xpBtn').textContent=s.leveling_enabled?'Enabled':'Disabled';
+    $('#xpBtn').classList.toggle('on',!!s.leveling_enabled);
+    const lc=state.channels.find(c=>c.id===String(s.level_channel)); $('#levelChannelBtn').textContent=lc?('#'+lc.name):'Choose channel';
+  }
+
+  async function patch(data){
+    if(!state.guild) return login();
+    try{const r=await api(`/api/guilds/${state.guild.id}/settings`,{method:'PATCH',body:JSON.stringify(data)});state.settings=r.settings;render();toast('Saved ✓');}
+    catch(e){toast(e.message,true)}
+  }
+
+  $('#prefixBtn').onclick=()=>openModal('Command prefix','Change the prefix used by prefix commands.',`<input id="mPrefix" class="field" maxlength="5" value="${state.settings?.prefix||'!'}"><div class="modal-actions"><button class="btn primary" id="mSave">Save</button></div>`);
+  $('#prefixValue').onclick=()=>$('#prefixBtn').click();
+  document.addEventListener('click',e=>{
+    if(e.target.id==='mSave'){const v=$('#mPrefix').value.trim();closeModal();patch({prefix:v});}
+  });
+
+  $('#levelChannelBtn').onclick=()=>{
+    if(!state.guild)return login();
+    const opts=state.channels.filter(c=>c.type==='text').map(c=>`<option value="${c.id}" ${String(c.id)===String(state.settings.level_channel)?'selected':''}>#${c.name}</option>`).join('');
+    openModal('Level-up channel','Pick where level-up messages should be posted.',`<select id="mChannel" class="field"><option value="0">Disabled</option>${opts}</select><div class="modal-actions"><button class="btn primary" id="mChannelSave">Save</button></div>`);
+  };
+  document.addEventListener('click',e=>{if(e.target.id==='mChannelSave'){const v=$('#mChannel').value;closeModal();patch({level_channel:v});}});
+  $('#levelEmbedBtn').onclick=()=>patch({level_embed:!state.settings.level_embed});
+  $('#xpBtn').onclick=()=>patch({leveling_enabled:!state.settings.leveling_enabled});
+
+  $$('[data-open]').forEach(b=>b.addEventListener('click',()=>{
+    const kind=b.dataset.open;
+    if(kind==='welcomeModal') openConfig('Welcome','welcome');
+    else if(kind==='goodbyeModal') openConfig('Goodbye','goodbye');
+    else if(kind==='aiModal') openAI();
+    else if(kind==='moderationModal') openModeration();
+    else if(kind==='reactionModal') openReaction();
+  }));
+
+  function channelOptions(selected){return state.channels.filter(c=>c.type==='text').map(c=>`<option value="${c.id}" ${String(c.id)===String(selected)?'selected':''}>#${c.name}</option>`).join('')}
+  function openConfig(title,prefix){
+    if(!state.guild)return login(); const s=state.settings;
+    openModal(`${title} settings`,`These settings are saved directly to Omni Cave's SQLite database.`,`
+      <label>Channel<select id="cfgChannel" class="field"><option value="0">Disabled</option>${channelOptions(s[prefix+'_channel'])}</select></label>
+      <label>Message<textarea id="cfgText" class="field" rows="4">${(s[prefix+'_text']||'').replace(/</g,'&lt;')}</textarea></label>
+      <label class="check"><input id="cfgEmbed" type="checkbox" ${s[prefix+'_embed']?'checked':''}> Use embed</label>
+      <div class="modal-actions"><button class="btn primary" id="cfgSave">Save settings</button></div>`);
+    $('#cfgSave').onclick=async()=>{const d={};d[prefix+'_channel']=$('#cfgChannel').value;d[prefix+'_text']=$('#cfgText').value;d[prefix+'_embed']=$('#cfgEmbed').checked;closeModal();await patch(d)};
+  }
+  function openAI(){openModal('Omni Cave AI','AI itself is configured with the GEMINI_API_KEY on Render. This dashboard shows the live bot state.',`<div class="info-box">Use <code>/ai</code>, mention Omni Cave, or reply to an Omni Cave message. The current Python bot keeps the Gemini model fallback system and new-member AI behavior.</div><div class="modal-actions"><a class="btn primary" href="#commands" onclick="document.getElementById('modalBackdrop').classList.remove('show')">View AI commands</a></div>`)}
+  function openModeration(){openModal('Moderation','The existing moderation commands remain in the bot. Dashboard actions can be added safely after OAuth is enabled.',`<div class="info-box"><b>Available:</b> warn, warnings, clearwarning, clearwarnings, mute/timeout, kick, ban, unban, role, setnick, clear and slowmode.</div><p class="muted">For destructive actions, use Discord for now. The dashboard backend already verifies Manage Server/Administrator access.</p>`)}
+  async function openReaction(){
+    if(!state.guild)return login();
+    let rows=[];try{rows=await api(`/api/guilds/${state.guild.id}/reaction-roles`)}catch(e){toast(e.message,true);return}
+    openModal('Reaction roles','Create a mapping between an emoji and a Discord role.',`<label>Channel<select id="rrChannel" class="field">${channelOptions('')}</select></label><label>Message ID<input id="rrMessage" class="field" placeholder="123456789012345678"></label><label>Emoji<input id="rrEmoji" class="field" placeholder="🎮"></label><label>Role<select id="rrRole" class="field">${state.roles.map(r=>`<option value="${r.id}">@${r.name}</option>`).join('')}</select></label><div class="modal-actions"><button class="btn primary" id="rrSave">Create mapping</button></div><div class="rr-list">${rows.map(r=>`<div>#${r.channel_id} · ${r.emoji} → <b>${r.role_id}</b></div>`).join('')||'<span class="muted">No mappings yet.</span>'}</div>`);
+    $('#rrSave').onclick=async()=>{try{await api(`/api/guilds/${state.guild.id}/reaction-roles`,{method:'POST',body:JSON.stringify({channel_id:$('#rrChannel').value,message_id:$('#rrMessage').value,emoji:$('#rrEmoji').value,role_id:$('#rrRole').value})});closeModal();toast('Reaction role created ✓')}catch(e){toast(e.message,true)}};
+  }
+
+  loadMe();
+})();
+</script>
+
+</div>
+</main>
+</div>
+</body>
+</html>
