@@ -303,8 +303,8 @@ async def on_message(message):
     s=settings(message.guild.id)
     if s["leveling_enabled"]:
         now=time.time(); row=db.execute("SELECT last_time FROM xp_cooldowns WHERE guild_id=? AND user_id=?",(message.guild.id,message.author.id)).fetchone()
-        if row is None or now-row["last_time"]>=60:
-            xp,level,up=add_xp(message.guild.id,message.author.id,random.randint(8,15))
+        if row is None or now-row["last_time"]>=30:
+            xp,level,up=add_xp(message.guild.id,message.author.id,random.randint(25,30))
             with db:
                 db.execute("INSERT INTO xp_cooldowns(guild_id,user_id,last_time) VALUES(?,?,?) ON CONFLICT(guild_id,user_id) DO UPDATE SET last_time=excluded.last_time",(message.guild.id,message.author.id,now))
             if up:
