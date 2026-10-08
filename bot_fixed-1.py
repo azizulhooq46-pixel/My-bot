@@ -35,7 +35,7 @@ app = Flask(__name__)
 
 @app.get("/")
 def home():
-    return send_from_directory(".", "index.html")
+    return send_from_directory(".", "OmniCave_index_dashboard.html")
 @app.get("/health")
 def health():
     return {"status": "online", "bot": "Omni Cave"}
